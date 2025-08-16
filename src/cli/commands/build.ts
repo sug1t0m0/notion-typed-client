@@ -1,6 +1,6 @@
-import { ConfigLoader, Logger } from '../../utils';
-import { SchemaResolver } from '../../services';
 import { Generator } from '../../generators';
+import { SchemaResolver } from '../../services';
+import { ConfigLoader, Logger } from '../../utils';
 
 export class BuildCommand {
   private logger: Logger;

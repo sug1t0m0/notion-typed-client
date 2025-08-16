@@ -1,6 +1,6 @@
-import { ConfigLoader, Logger } from '../../utils';
-import { SchemaResolver } from '../../services';
 import { Generator } from '../../generators';
+import { SchemaResolver } from '../../services';
+import { ConfigLoader, Logger } from '../../utils';
 
 export class GenerateCommand {
   private logger: Logger;
@@ -48,8 +48,8 @@ export class GenerateCommand {
   }
 
   private async watch(configPath?: string): Promise<void> {
-    const fs = await import('fs');
-    const path = await import('path');
+    const fs = await import('node:fs');
+    const _path = await import('node:path');
 
     const configLoader = new ConfigLoader(configPath);
     const resolvedConfigPath = configLoader.getConfigPath();

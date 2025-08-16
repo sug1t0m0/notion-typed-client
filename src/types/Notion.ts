@@ -1,5 +1,4 @@
-import { Client } from '@notionhq/client';
-import { DatabaseConfig } from './Config';
+import type { DatabaseConfig } from './Config';
 
 export interface SelectOption {
   id: string;

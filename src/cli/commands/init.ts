@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { Logger } from '../../utils';
 
 export class InitCommand {
@@ -159,12 +159,12 @@ NOTION_API_KEY=your_notion_api_key_here
       }
 
       // 追加
-      const updated = current + '\n' + additions.join('\n') + '\n';
+      const updated = `${current}\n${additions.join('\n')}\n`;
       fs.writeFileSync(gitignorePath, updated, 'utf-8');
       this.logger.success('Updated .gitignore');
     } else {
       // 新規作成
-      const content = additions.slice(1).join('\n') + '\n';
+      const content = `${additions.slice(1).join('\n')}\n`;
       fs.writeFileSync(gitignorePath, content, 'utf-8');
       this.logger.success('Created .gitignore');
     }

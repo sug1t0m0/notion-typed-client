@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ConfigLoader } from './ConfigLoader';
-import * as fs from 'fs';
-import * as path from 'path';
 
 describe('ConfigLoader', () => {
   let loader: ConfigLoader;

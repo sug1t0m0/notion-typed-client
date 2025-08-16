@@ -1,4 +1,4 @@
-import { ResolvedDatabaseConfig, ResolvedPropertyConfig } from '../types';
+import type { ResolvedDatabaseConfig } from '../types';
 
 export class ClientGenerator {
   generateClient(databases: ResolvedDatabaseConfig[]): string {

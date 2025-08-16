@@ -1,5 +1,5 @@
 import { compile } from 'json-schema-to-typescript';
-import { ResolvedDatabaseConfig } from '../types';
+import type { ResolvedDatabaseConfig } from '../types';
 import { SchemaGenerator } from './SchemaGenerator';
 
 export class TypeGenerator {

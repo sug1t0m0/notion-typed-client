@@ -2,10 +2,10 @@
 
 import { Command } from 'commander';
 import {
-  InitCommand,
+  BuildCommand,
   FetchCommand,
   GenerateCommand,
-  BuildCommand,
+  InitCommand,
   ValidateCommand,
 } from './cli/commands';
 

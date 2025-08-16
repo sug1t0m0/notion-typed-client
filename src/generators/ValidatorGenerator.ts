@@ -1,6 +1,4 @@
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
-import { ResolvedDatabaseConfig } from '../types';
+import type { ResolvedDatabaseConfig } from '../types';
 import { SchemaGenerator } from './SchemaGenerator';
 
 export class ValidatorGenerator {

@@ -1,6 +1,5 @@
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 import * as ts from 'typescript';
-import { DatabaseConfig, PropertyConfig } from '../types';
 
 export class ConfigUpdater {
   private configPath: string;

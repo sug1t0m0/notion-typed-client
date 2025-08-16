@@ -1,5 +1,5 @@
-export * from './init';
+export * from './build';
 export * from './fetch';
 export * from './generate';
-export * from './build';
+export * from './init';
 export * from './validate';

@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import type { ResolvedDatabaseConfig } from '../types';
 import { TypeGenerator } from './TypeGenerator';
-import { ResolvedDatabaseConfig } from '../types';
 
 describe('TypeGenerator', () => {
   const generator = new TypeGenerator();

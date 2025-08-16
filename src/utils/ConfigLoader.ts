@@ -1,6 +1,6 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import { NotionTypedConfig } from '../types';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import type { NotionTypedConfig } from '../types';
 
 export class ConfigLoader {
   private configPath: string;

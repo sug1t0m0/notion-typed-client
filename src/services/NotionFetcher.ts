@@ -1,12 +1,12 @@
 import { Client } from '@notionhq/client';
-import {
+import type {
   DatabaseConfig,
-  PropertyConfig,
   DatabaseSchema,
-  ResolvedDatabaseConfig,
-  ResolvedPropertyConfig,
   FetchResult,
   NotionPropertyType,
+  PropertyConfig,
+  ResolvedDatabaseConfig,
+  ResolvedPropertyConfig,
 } from '../types';
 import { Logger } from '../utils';
 
@@ -85,7 +85,7 @@ export class NotionFetcher {
       try {
         const db = await this.client.databases.retrieve({ database_id: config.id });
         return { id: db.id };
-      } catch (error) {
+      } catch (_error) {
         this.logger.warning(`Database with ID ${config.id} not found, trying search by name`);
       }
     }

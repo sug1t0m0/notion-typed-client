@@ -29,7 +29,7 @@ export class Logger {
     }
   }
 
-  table(data: any): void {
+  table(data: unknown): void {
     console.table(data);
   }
 

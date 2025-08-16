@@ -1,10 +1,10 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { FetchResult, NotionTypedConfig } from '../types';
-import { TypeGenerator } from './TypeGenerator';
-import { ClientGenerator } from './ClientGenerator';
-import { ValidatorGenerator } from './ValidatorGenerator';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import type { FetchResult, NotionTypedConfig } from '../types';
 import { Logger } from '../utils';
+import { ClientGenerator } from './ClientGenerator';
+import { TypeGenerator } from './TypeGenerator';
+import { ValidatorGenerator } from './ValidatorGenerator';
 
 export class Generator {
   private logger: Logger;

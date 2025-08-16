@@ -1,4 +1,4 @@
-import { ResolvedDatabaseConfig, ResolvedPropertyConfig } from '../types';
+import type { ResolvedDatabaseConfig, ResolvedPropertyConfig } from '../types';
 
 export class SchemaGenerator {
   generateJSONSchema(database: ResolvedDatabaseConfig): any {
@@ -261,9 +261,6 @@ export class SchemaGenerator {
         return {
           oneOf: [{ type: 'string' }, { type: 'number' }, { type: 'null' }],
         };
-
-      case 'formula':
-      case 'rollup':
       default:
         return { type: 'any' };
     }

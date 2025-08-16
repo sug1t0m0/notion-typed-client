@@ -1,7 +1,7 @@
-import { NotionTypedConfig, FetchResult, DatabaseConfig } from '../types';
+import * as readline from 'node:readline';
+import type { FetchResult } from '../types';
 import { ConfigLoader, ConfigUpdater, Logger } from '../utils';
 import { NotionFetcher } from './NotionFetcher';
-import * as readline from 'readline';
 
 export class SchemaResolver {
   private logger: Logger;

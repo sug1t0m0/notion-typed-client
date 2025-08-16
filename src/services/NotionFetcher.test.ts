@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { mockDatabaseConfig, mockDatabaseSchema } from '../__tests__/TestUtils';
 import { NotionFetcher } from './NotionFetcher';
-import { mockDatabaseSchema, mockDatabaseConfig } from '../__tests__/TestUtils';
 
 // Mock @notionhq/client
 vi.mock('@notionhq/client', () => ({
