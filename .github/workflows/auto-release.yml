@@ -162,15 +162,15 @@ jobs:
           VERSION_TYPE="${{ needs.analyze-commits.outputs.version_type }}"
           
           if [ "$VERSION_TYPE" = "major" ]; then
-            NEW_VERSION=$(npm version major --no-git-tag-version)
+            npm version major --no-git-tag-version
           elif [ "$VERSION_TYPE" = "minor" ]; then
-            NEW_VERSION=$(npm version minor --no-git-tag-version)
+            npm version minor --no-git-tag-version
           else
-            NEW_VERSION=$(npm version patch --no-git-tag-version)
+            npm version patch --no-git-tag-version
           fi
           
-          # Remove 'v' prefix from npm version output
-          NEW_VERSION=${NEW_VERSION#v}
+          # Get the new version from package.json
+          NEW_VERSION=$(node -p "require('./package.json').version")
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "tag_name=v$NEW_VERSION" >> $GITHUB_OUTPUT
       
