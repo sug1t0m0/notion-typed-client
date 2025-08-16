@@ -10,6 +10,7 @@ coverage/
 **/.env
 **/.env.local
 **/.env.*.local
+.npmrc
 
 # Editor directories and files
 .vscode/
