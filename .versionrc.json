@@ -1,0 +1,65 @@
+{
+  "types": [
+    {
+      "type": "feat",
+      "section": "✨ Features"
+    },
+    {
+      "type": "fix",
+      "section": "🐛 Bug Fixes"
+    },
+    {
+      "type": "perf",
+      "section": "⚡ Performance Improvements"
+    },
+    {
+      "type": "refactor",
+      "section": "🔧 Code Refactoring"
+    },
+    {
+      "type": "docs",
+      "section": "📚 Documentation"
+    },
+    {
+      "type": "test",
+      "section": "✅ Tests"
+    },
+    {
+      "type": "build",
+      "section": "📦 Build System"
+    },
+    {
+      "type": "ci",
+      "section": "🔄 CI/CD"
+    },
+    {
+      "type": "chore",
+      "section": "🧹 Chores"
+    },
+    {
+      "type": "style",
+      "section": "💄 Styles"
+    },
+    {
+      "type": "revert",
+      "section": "⏪ Reverts"
+    }
+  ],
+  "commitUrlFormat": "https://github.com/sug1t0m0/notion-typed-client/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/sug1t0m0/notion-typed-client/compare/{{previousTag}}...{{currentTag}}",
+  "issueUrlFormat": "https://github.com/sug1t0m0/notion-typed-client/issues/{{id}}",
+  "userUrlFormat": "https://github.com/{{user}}",
+  "releaseCommitMessageFormat": "chore(release): {{currentTag}}",
+  "skip": {
+    "bump": false,
+    "changelog": false,
+    "commit": false,
+    "tag": false
+  },
+  "bumpFiles": [
+    {
+      "filename": "package.json",
+      "type": "json"
+    }
+  ]
+}

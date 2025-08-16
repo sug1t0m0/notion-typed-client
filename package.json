@@ -21,7 +21,12 @@
     "check": "biome check .",
     "check:fix": "biome check --apply-unsafe .",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "release:patch": "npm version patch --no-git-tag-version",
+    "release:minor": "npm version minor --no-git-tag-version",
+    "release:major": "npm version major --no-git-tag-version",
+    "version": "npm run build && git add dist/",
+    "postversion": "git push && git push --tags"
   },
   "keywords": [
     "notion",
