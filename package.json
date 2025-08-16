@@ -32,6 +32,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
     "@notionhq/client": "^4.0.2",
