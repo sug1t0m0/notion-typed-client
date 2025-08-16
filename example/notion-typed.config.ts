@@ -1,4 +1,4 @@
-import { NotionTypedConfig } from 'notion-typed-client';
+import { NotionTypedConfig } from '@sug1t0m0/notion-typed-client';
 
 const config: NotionTypedConfig = {
   databases: [
