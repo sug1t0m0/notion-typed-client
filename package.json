@@ -1,0 +1,60 @@
+{
+  "name": "notion-typed-client",
+  "version": "1.0.0",
+  "description": "Type-safe wrapper for Notion SDK with database schema injection",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "notion-typed-client": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "build:dev": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --apply-unsafe .",
+    "format": "biome format .",
+    "format:fix": "biome format --write .",
+    "check": "biome check .",
+    "check:fix": "biome check --apply-unsafe .",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "notion",
+    "sdk",
+    "typescript",
+    "wrapper",
+    "type-safe"
+  ],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@10.14.0",
+  "dependencies": {
+    "@notionhq/client": "^4.0.2",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "chalk": "^5.5.0",
+    "commander": "^14.0.0",
+    "json-schema-to-typescript": "^15.0.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.2.1",
+    "@typescript-eslint/eslint-plugin": "^8.39.1",
+    "@typescript-eslint/parser": "^8.39.1",
+    "@vitest/ui": "^3.2.4",
+    "dotenv": "^17.2.1",
+    "eslint": "^9.33.0",
+    "happy-dom": "^18.0.1",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.1",
+    "vitest": "^3.2.4"
+  }
+}
