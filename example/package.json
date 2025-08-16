@@ -1,0 +1,28 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "generate": "notion-typed-client generate",
+    "fetch": "notion-typed-client fetch",
+    "build": "notion-typed-client build",
+    "test:notion": "ts-node test-with-notion-client.ts",
+    "test:typed": "ts-node test-with-typed-client.ts",
+    "test:create": "ts-node test-create-data.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.14.0",
+  "dependencies": {
+    "@notionhq/client": "^4.0.2",
+    "dotenv": "^17.2.1",
+    "notion-typed-client": "link:.."
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}

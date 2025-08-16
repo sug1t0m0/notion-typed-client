@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declarationMap": false,  // ソースマップを無効化
+    "sourceMap": false        // JSのソースマップも無効化
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "src/test-utils.ts",
+    "src/generated/**/*",
+    "example/**/*"
+  ]
+}

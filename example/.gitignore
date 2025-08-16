@@ -1,0 +1,4 @@
+# Notion Typed Client
+.env
+src/generated/
+*.log

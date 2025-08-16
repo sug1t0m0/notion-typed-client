@@ -1,0 +1,14 @@
+# Sensitive files
+**/.env
+**/.env.*
+!**/.env.example
+
+# API Keys and secrets
+**/secrets/
+**/*.key
+**/*.pem
+**/*.cert
+
+# Private configuration
+private/
+credentials/
