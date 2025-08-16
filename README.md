@@ -1,5 +1,13 @@
 # notion-typed-client
 
+[![npm version](https://img.shields.io/npm/v/@sug1t0m0/notion-typed-client.svg)](https://www.npmjs.com/package/@sug1t0m0/notion-typed-client)
+[![npm downloads](https://img.shields.io/npm/dm/@sug1t0m0/notion-typed-client.svg)](https://www.npmjs.com/package/@sug1t0m0/notion-typed-client)
+[![Test and Lint](https://github.com/sug1t0m0/notion-typed-client/workflows/Test%20and%20Lint/badge.svg)](https://github.com/sug1t0m0/notion-typed-client/actions/workflows/test-and-lint.yml)
+[![Auto Release](https://github.com/sug1t0m0/notion-typed-client/workflows/Auto%20Release/badge.svg)](https://github.com/sug1t0m0/notion-typed-client/actions/workflows/auto-release.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
+
 Notion APIクライアントに型安全性をもたらす自動生成ツール
 
 ## 概要
@@ -17,11 +25,11 @@ notion-typed-clientは、Notion APIの汎用的なクライアントの型安全
 ## インストール
 
 ```bash
-npm install -D notion-typed-client
+npm install -D @sug1t0m0/notion-typed-client
 # または
-pnpm add -D notion-typed-client
+pnpm add -D @sug1t0m0/notion-typed-client
 # または
-yarn add -D notion-typed-client
+yarn add -D @sug1t0m0/notion-typed-client
 ```
 
 ## クイックスタート
@@ -344,5 +352,6 @@ Issues and Pull Requests are welcome!
 
 ## Links
 
-- [GitHub Repository](https://github.com/yourusername/notion-typed-client)
+- [GitHub Repository](https://github.com/sug1t0m0/notion-typed-client)
+- [NPM Package](https://www.npmjs.com/package/@sug1t0m0/notion-typed-client)
 - [Notion API Documentation](https://developers.notion.com/)
