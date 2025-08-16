@@ -290,6 +290,50 @@ src/generated/
 ### 型エラー
 `npx notion-typed-client build`を実行して最新のスキーマで型を再生成してください。
 
+## リリース管理
+
+このプロジェクトは[Semantic Versioning](https://semver.org/)に従っています。
+
+### 自動リリース
+
+- **feat:** プレフィックスのコミットでminorバージョンが上がります
+- **fix:** プレフィックスのコミットでpatchバージョンが上がります  
+- **BREAKING CHANGE:** または `!` を含むコミットでmajorバージョンが上がります
+
+### 手動リリース
+
+GitHubの Actions タブから "Release" ワークフローを実行してバージョンタイプを選択できます。
+
+### バージョン管理
+- **MAJOR** (x.0.0): 破壊的変更
+- **MINOR** (1.x.0): 新機能追加（後方互換性あり）
+- **PATCH** (1.1.x): バグ修正
+
+### Conventional Commits
+
+コミットメッセージは以下の形式に従ってください：
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+例:
+```
+feat(cli): add new init command
+fix: resolve type generation bug
+docs: update README with examples
+BREAKING CHANGE: remove deprecated API
+```
+
+設定されたコミットメッセージテンプレートを使用する場合：
+```bash
+git config commit.template .gitmessage
+```
+
 ## ライセンス
 
 MIT
