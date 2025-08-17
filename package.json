@@ -47,6 +47,7 @@
     "ajv-formats": "^3.0.1",
     "chalk": "^5.5.0",
     "commander": "^14.0.0",
+    "jiti": "^2.5.1",
     "json-schema-to-typescript": "^15.0.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"

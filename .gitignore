@@ -42,5 +42,6 @@ example/generated/
 
 # Notion Typed Client
 .env
+notion-typed.config.ts
 src/generated/
 *.log

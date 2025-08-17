@@ -5,9 +5,14 @@ import { ConfigLoader } from './ConfigLoader';
 
 describe('ConfigLoader', () => {
   let loader: ConfigLoader;
-  const testConfigPath = path.resolve(__dirname, 'test-config.ts');
+  let testConfigPath: string;
 
   beforeEach(() => {
+    // Use unique file name for each test to avoid caching issues
+    testConfigPath = path.resolve(
+      __dirname,
+      `test-config-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.ts`
+    );
     loader = new ConfigLoader(testConfigPath);
     vi.clearAllMocks();
   });
@@ -60,22 +65,19 @@ describe('ConfigLoader', () => {
     });
 
     it('should validate required database fields', async () => {
-      const invalidConfig = `
-        export default {
-          databases: [
-            {
-              id: null,
-              // missing name
-              displayName: 'Test Database',
-              notionName: 'Test',
-              properties: []
-            }
-          ],
-          output: {
-            path: './generated'
-          }
-        };
-      `;
+      const invalidConfig = `export default {
+  databases: [
+    {
+      id: null,
+      displayName: 'Test Database',
+      notionName: 'Test',
+      properties: []
+    }
+  ],
+  output: {
+    path: './generated'
+  }
+};`;
 
       fs.writeFileSync(testConfigPath, invalidConfig);
 
@@ -83,30 +85,27 @@ describe('ConfigLoader', () => {
     });
 
     it('should validate required property fields', async () => {
-      const invalidConfig = `
-        export default {
-          databases: [
-            {
-              id: null,
-              name: 'TestDB',
-              displayName: 'Test Database',
-              notionName: 'Test',
-              properties: [
-                {
-                  id: null,
-                  name: 'title',
-                  // missing displayName
-                  notionName: 'Title',
-                  type: 'title'
-                }
-              ]
-            }
-          ],
-          output: {
-            path: './generated'
-          }
-        };
-      `;
+      const invalidConfig = `export default {
+  databases: [
+    {
+      id: null,
+      name: 'TestDB',
+      displayName: 'Test Database',
+      notionName: 'Test',
+      properties: [
+        {
+          id: null,
+          name: 'title',
+          notionName: 'Title',
+          type: 'title'
+        }
+      ]
+    }
+  ],
+  output: {
+    path: './generated'
+  }
+};`;
 
       fs.writeFileSync(testConfigPath, invalidConfig);
 
@@ -116,30 +115,28 @@ describe('ConfigLoader', () => {
     });
 
     it('should accept null type for properties', async () => {
-      const configWithNullType = `
-        export default {
-          databases: [
-            {
-              id: null,
-              name: 'TestDB',
-              displayName: 'Test Database',
-              notionName: 'Test',
-              properties: [
-                {
-                  id: null,
-                  name: 'unknownProp',
-                  displayName: 'Unknown',
-                  notionName: 'Unknown',
-                  type: null
-                }
-              ]
-            }
-          ],
-          output: {
-            path: './generated'
-          }
-        };
-      `;
+      const configWithNullType = `export default {
+  databases: [
+    {
+      id: null,
+      name: 'TestDB',
+      displayName: 'Test Database',
+      notionName: 'Test',
+      properties: [
+        {
+          id: null,
+          name: 'unknownProp',
+          displayName: 'Unknown',
+          notionName: 'Unknown',
+          type: null
+        }
+      ]
+    }
+  ],
+  output: {
+    path: './generated'
+  }
+};`;
 
       fs.writeFileSync(testConfigPath, configWithNullType);
 
@@ -149,14 +146,11 @@ describe('ConfigLoader', () => {
     });
 
     it('should validate output configuration', async () => {
-      const invalidOutputConfig = `
-        export default {
-          databases: [],
-          output: {
-            // missing path
-          }
-        };
-      `;
+      const invalidOutputConfig = `export default {
+  databases: [],
+  output: {
+  }
+};`;
 
       fs.writeFileSync(testConfigPath, invalidOutputConfig);
 
