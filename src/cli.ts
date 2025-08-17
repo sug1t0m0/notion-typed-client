@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+// Load environment variables from .env file before anything else
+import * as dotenv from 'dotenv';
+
+dotenv.config();
+
 import { Command } from 'commander';
 import {
   BuildCommand,
