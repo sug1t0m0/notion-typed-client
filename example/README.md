@@ -1,12 +1,15 @@
 # Notion Typed Client Example
 
-このディレクトリは、`notion-typed-client`の完全な使用例を示す独立したプロジェクトです。
+このディレクトリは、`@sug1t0m0/notion-typed-client`の完全な使用例を示す独立したプロジェクトです。
 
 ## セットアップ
 
 ### 1. 依存関係のインストール
 
 ```bash
+# Install the package from NPM
+pnpm add -D @sug1t0m0/notion-typed-client
+# Or install all dependencies
 pnpm install
 ```
 
