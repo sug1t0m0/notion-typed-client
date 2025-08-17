@@ -10,7 +10,7 @@ export class ValidateCommand {
 
   async execute(options: { config?: string }): Promise<void> {
     try {
-      const resolver = new SchemaResolver(options.config);
+      const resolver = new SchemaResolver({ configPath: options.config });
 
       this.logger.info('Validating configuration against Notion...');
       const isValid = await resolver.validateConfig();

@@ -16,7 +16,7 @@ export class BuildCommand {
       const config = await configLoader.load();
 
       // スキーマを取得（設定ファイル更新あり）
-      const resolver = new SchemaResolver(options.config);
+      const resolver = new SchemaResolver({ configPath: options.config });
       this.logger.info('Fetching schemas from Notion...');
       const fetchResult = await resolver.resolve({ dryRun: false });
 

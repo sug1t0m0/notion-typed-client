@@ -75,13 +75,18 @@ pnpm run test:typed   # Using generated typed client
 
 **Services Layer** (`src/services/`)
 - `NotionFetcher` - Handles direct Notion API communication, ID resolution, and schema extraction
+  - **Dependency Injection Support**: Accepts custom Notion client implementations via constructor
+  - **Interface**: Uses `NotionClientInterface` for decoupling from `@notionhq/client`
 - `SchemaResolver` - Orchestrates the schema fetching and config updating workflow
+  - **Client Injection**: Supports injecting custom clients for testing and advanced use cases
 
 **Generators Layer** (`src/generators/`)
 - `TypeGenerator` - Uses json-schema-to-typescript to generate TypeScript interfaces
 - `SchemaGenerator` - Creates JSON schemas from resolved database configs  
 - `ValidatorGenerator` - Generates AJV runtime validators
 - `ClientGenerator` - Produces the final typed Notion client with property conversion
+  - **Generated Client DI**: Generated clients support both auth strings and injected clients
+  - **Interface Compatibility**: Generated clients accept any object implementing `NotionClientInterface`
 - `Generator` - Main orchestrator that coordinates all generators
 
 **Type System** (`src/types/`)
@@ -164,6 +169,52 @@ The tool expects a `notion-typed.config.ts` file exporting a `NotionTypedConfig`
 - Clearly indicates auto-generated content
 - Library-specific namespace prevents conflicts with other tools
 - Located in user's project root (not in node_modules)
+
+## Dependency Injection Architecture
+
+### Design Philosophy
+
+The dependency injection system allows users to inject custom Notion client implementations while maintaining interface compatibility with the official `@notionhq/client`. This enables:
+
+- **Testing**: Mock clients for unit tests without hitting real APIs
+- **Customization**: Add logging, retry logic, rate limiting, caching
+- **Proxy Support**: Corporate environments with custom network requirements
+- **Alternative Implementations**: Drop-in replacements for the official client
+
+### Interface Contract
+
+All injected clients must implement `NotionClientInterface`:
+
+```typescript
+interface NotionClientInterface {
+  databases: {
+    retrieve(args: { database_id: string }): Promise<any>;
+    query(args: { /* query params */ }): Promise<{ /* response */ }>;
+  };
+  pages: {
+    create(args: { /* create params */ }): Promise<any>;
+    retrieve(args: { page_id: string }): Promise<any>;
+    update(args: { /* update params */ }): Promise<any>;
+  };
+  search(args: { /* search params */ }): Promise<{ /* response */ }>;
+}
+```
+
+### Implementation Layers
+
+1. **Schema Fetching** (`NotionFetcher`, `SchemaResolver`)
+   - Accepts injected clients via constructor options
+   - Fallback to official client with API key if no client provided
+
+2. **Generated Client** (`ClientGenerator`)
+   - Generated code requires `client` constructor option only
+   - Users must provide a client implementing `NotionClientInterface`
+   - Interface type checking ensures compatibility
+
+3. **Type Safety**
+   - Injected clients must match exact interface signature
+   - TypeScript compiler enforces method compatibility
+   - Runtime behavior preserved regardless of implementation
 
 ## Common Development Scenarios
 

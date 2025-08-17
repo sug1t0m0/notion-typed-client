@@ -8,22 +8,29 @@ import type {
   ResolvedDatabaseConfig,
   ResolvedPropertyConfig,
 } from '../types';
+import type { NotionClientInterface } from '../interfaces';
 import { Logger } from '../utils';
 
 export class NotionFetcher {
-  private client: Client;
+  private client: NotionClientInterface;
   private logger: Logger;
 
-  constructor(apiKey?: string) {
-    const key = apiKey || process.env.NOTION_API_KEY;
-    if (!key) {
-      throw new Error(
-        'Notion API key is required. Set NOTION_API_KEY environment variable or pass it as parameter.'
-      );
-    }
-
-    this.client = new Client({ auth: key });
+  constructor(client?: NotionClientInterface) {
     this.logger = Logger.create('NotionFetcher');
+
+    if (client) {
+      // Use injected client (must have same interface as official Notion client)
+      this.client = client;
+    } else {
+      // Default: use official Notion client
+      const key = process.env.NOTION_API_KEY;
+      if (!key) {
+        throw new Error(
+          'Notion API key is required. Set NOTION_API_KEY environment variable or inject a Notion client.'
+        );
+      }
+      this.client = new Client({ auth: key });
+    }
   }
 
   async fetchSchemas(databases: DatabaseConfig[]): Promise<FetchResult> {
