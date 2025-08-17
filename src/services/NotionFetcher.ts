@@ -8,6 +8,7 @@ import type {
   PropertyConfig,
   ResolvedDatabaseConfig,
   ResolvedPropertyConfig,
+  StatusGroup,
 } from '../types';
 import { Logger } from '../utils';
 
@@ -176,6 +177,7 @@ export class NotionFetcher {
           notionName: actualNotionName,
           type: propertySchema.type,
           options: this.extractOptions(propertySchema),
+          groups: this.extractGroups(propertySchema),
         };
         resolved.push(resolvedProp);
       } else {
@@ -206,6 +208,13 @@ export class NotionFetcher {
     }
     if (propertySchema.status?.options) {
       return propertySchema.status.options;
+    }
+    return undefined;
+  }
+
+  private extractGroups(propertySchema: any): StatusGroup[] | undefined {
+    if (propertySchema.status?.groups) {
+      return propertySchema.status.groups;
     }
     return undefined;
   }

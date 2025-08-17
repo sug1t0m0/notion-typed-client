@@ -147,7 +147,31 @@ export class SchemaGenerator {
         };
 
       case 'status':
-        if (prop.options && prop.options.length > 0) {
+        if (prop.options && prop.options.length > 0 && prop.groups && prop.groups.length > 0) {
+          // Generate strict name-group combinations
+          const validCombinations = prop.options
+            .map((option: any) => {
+              const group = prop.groups?.find((g: any) => g.option_ids.includes(option.id));
+              if (!group) return null;
+
+              return {
+                type: 'object',
+                properties: {
+                  name: { type: 'string', enum: [option.name] },
+                  group: { type: 'string', enum: [group.name] },
+                  color: { type: 'string' },
+                },
+                required: ['name', 'group'],
+                additionalProperties: true,
+              };
+            })
+            .filter(Boolean);
+
+          return {
+            oneOf: [...validCombinations, { type: 'null' }],
+          };
+        } else if (prop.options && prop.options.length > 0) {
+          // Fallback for status without groups
           return {
             oneOf: [
               {
@@ -276,11 +300,45 @@ export class SchemaGenerator {
         return { type: 'number' };
 
       case 'select':
-      case 'status':
         if (prop.options && prop.options.length > 0) {
           return {
             type: 'string',
             enum: prop.options.map((opt: any) => opt.name),
+          };
+        }
+        return { type: 'string' };
+
+      case 'status':
+        // For create/update operations, Notion API only accepts string (name)
+        // The client will convert object format to string internally
+        if (prop.options && prop.options.length > 0) {
+          return {
+            oneOf: [
+              {
+                type: 'string',
+                enum: prop.options.map((opt: any) => opt.name),
+              },
+              // Also allow object format for type safety, but convert to string internally
+              ...(prop.groups && prop.groups.length > 0
+                ? prop.options
+                    .map((option: any) => {
+                      const group = prop.groups?.find((g: any) => g.option_ids.includes(option.id));
+                      if (!group) return null;
+
+                      return {
+                        type: 'object',
+                        properties: {
+                          name: { type: 'string', enum: [option.name] },
+                          group: { type: 'string', enum: [group.name] },
+                          color: { type: 'string' },
+                        },
+                        required: ['name'],
+                        additionalProperties: true,
+                      };
+                    })
+                    .filter(Boolean)
+                : []),
+            ],
           };
         }
         return { type: 'string' };
