@@ -44,6 +44,13 @@ export interface DatabaseSchema {
   properties: Record<string, PropertySchema>;
 }
 
+export interface StatusGroup {
+  id: string;
+  name: string;
+  color: string;
+  option_ids: string[];
+}
+
 export interface ResolvedPropertyConfig {
   id: string;
   name: string;
@@ -51,6 +58,7 @@ export interface ResolvedPropertyConfig {
   notionName: string;
   type: string;
   options?: SelectOption[] | StatusOption[];
+  groups?: StatusGroup[];
 }
 
 export interface ResolvedDatabaseConfig {

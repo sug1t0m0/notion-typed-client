@@ -51,6 +51,13 @@ const config: NotionTypedConfig = {
                     notionName: '終了日時',
                     type: 'date',
                 },
+                {
+                    id: null,
+                    name: 'hogeStatus',
+                    displayName: 'hogeステータス',
+                    notionName: 'hogeステータス',
+                    type: null,
+                },
             ],
         },
         // Add more databases here

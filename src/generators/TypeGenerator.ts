@@ -54,6 +54,13 @@ export type NotionSelectOption = {
   id?: string;
   name: string;
   color?: string;
+};
+
+export type NotionStatusGroup = {
+  id: string;
+  name: string;
+  color: string;
+  option_ids: string[];
 };`;
   }
 
@@ -108,6 +115,12 @@ export type NotionSelectOption = {
       types.push(enumTypes);
     }
 
+    // Status group型を生成
+    const groupTypes = this.generateStatusGroupTypes(database);
+    if (groupTypes) {
+      types.push(groupTypes);
+    }
+
     return types.join('\n\n');
   }
 
@@ -132,6 +145,76 @@ export type NotionSelectOption = {
     return enums.length > 0 ? enums.join('\n\n') : null;
   }
 
+  private generateStatusGroupTypes(database: ResolvedDatabaseConfig): string | null {
+    const groupTypes: string[] = [];
+
+    for (const prop of database.properties) {
+      if (prop.type === 'status' && prop.groups && prop.groups.length > 0) {
+        // Generate group enum type
+        const groupEnumName = `${database.name}${this.capitalize(prop.name)}Groups`;
+        const groupValues = prop.groups
+          .map((group: any) => `  | '${group.name.replace(/'/g, "\\'")}'`)
+          .join('\n');
+
+        groupTypes.push(`export type ${groupEnumName} =\n${groupValues};`);
+
+        // Generate group-to-options mapping type
+        const mappingTypeName = `${database.name}${this.capitalize(prop.name)}GroupMapping`;
+        const mappingEntries = prop.groups
+          .map((group: any) => {
+            const optionNames = group.option_ids
+              .map((optionId: string) => {
+                const option = prop.options?.find((opt: any) => opt.id === optionId);
+                return option ? `'${option.name.replace(/'/g, "\\'")}'` : null;
+              })
+              .filter(Boolean)
+              .join(' | ');
+
+            return `  '${group.name.replace(/'/g, "\\'")}': ${optionNames || 'never'};`;
+          })
+          .join('\n');
+
+        groupTypes.push(`export type ${mappingTypeName} = {\n${mappingEntries}\n};`);
+
+        // Generate option-to-group mapping type (reverse mapping)
+        const reverseTypeName = `${database.name}${this.capitalize(prop.name)}OptionToGroupMapping`;
+        const reverseEntries =
+          prop.options
+            ?.map((option: any) => {
+              const group = prop.groups?.find((g: any) => g.option_ids.includes(option.id));
+              return group
+                ? `  '${option.name.replace(/'/g, "\\'")}': '${group.name.replace(/'/g, "\\'")}'`
+                : null;
+            })
+            .filter(Boolean)
+            .join(';\n') || '';
+
+        if (reverseEntries) {
+          groupTypes.push(`export type ${reverseTypeName} = {\n${reverseEntries};\n};`);
+        }
+
+        // Generate strict name-group combination type (NEW!)
+        const strictCombinationTypeName = `${database.name}${this.capitalize(prop.name)}NameGroupPair`;
+        const strictCombinations =
+          prop.options
+            ?.map((option: any) => {
+              const group = prop.groups?.find((g: any) => g.option_ids.includes(option.id));
+              return group
+                ? `  | { name: '${option.name.replace(/'/g, "\\'")}'; group: '${group.name.replace(/'/g, "\\'")}'; color?: string; [k: string]: any }`
+                : null;
+            })
+            .filter(Boolean)
+            .join('\n') || '';
+
+        if (strictCombinations) {
+          groupTypes.push(`export type ${strictCombinationTypeName} =\n${strictCombinations};`);
+        }
+      }
+    }
+
+    return groupTypes.length > 0 ? groupTypes.join('\n\n') : null;
+  }
+
   private generateDatabaseMapping(databases: ResolvedDatabaseConfig[]): string {
     const mappings = databases.map((db) => `  '${db.id}': ${db.name};`).join('\n');
     const names = databases.map((db) => `  | '${db.name}'`).join('\n');
@@ -149,6 +232,72 @@ export type NotionSelectOption = {
 
     const nameToTypeMapping = databases.map((db) => `  '${db.name}': ${db.name};`).join('\n');
 
+    // Generate status property mapping for type safety
+    const statusPropertyMappings: string[] = [];
+    for (const db of databases) {
+      const statusProps = db.properties.filter(
+        (p) => p.type === 'status' && p.groups && p.groups.length > 0
+      );
+      if (statusProps.length > 0) {
+        const propMappings = statusProps
+          .map(
+            (p) => `    '${p.name}': {
+      groups: ${db.name}${this.capitalize(p.name)}Groups;
+      options: ${db.name}${this.capitalize(p.name)}Options;
+      groupMapping: ${db.name}${this.capitalize(p.name)}GroupMapping;
+      optionToGroupMapping: ${db.name}${this.capitalize(p.name)}OptionToGroupMapping;
+    }`
+          )
+          .join(';\n');
+
+        statusPropertyMappings.push(`  '${db.name}': {
+${propMappings};
+  }`);
+      }
+    }
+
+    const statusPropertyMapping =
+      statusPropertyMappings.length > 0
+        ? `\nexport type StatusPropertyMapping = {\n${statusPropertyMappings.join(';\n')};\n};`
+        : '';
+
+    // Generate helper types for type-safe property access
+    const propertyHelpers =
+      statusPropertyMappings.length > 0
+        ? `\n// Helper types for type-safe status property access
+export type GetStatusProperties<T extends DatabaseNames> = T extends keyof StatusPropertyMapping 
+  ? keyof StatusPropertyMapping[T] 
+  : never;
+
+export type GetStatusGroups<T extends DatabaseNames, P extends GetStatusProperties<T>> = 
+  T extends keyof StatusPropertyMapping 
+    ? P extends keyof StatusPropertyMapping[T] 
+      ? StatusPropertyMapping[T][P]['groups']
+      : never
+    : never;
+
+export type GetStatusOptions<T extends DatabaseNames, P extends GetStatusProperties<T>> = 
+  T extends keyof StatusPropertyMapping 
+    ? P extends keyof StatusPropertyMapping[T] 
+      ? StatusPropertyMapping[T][P]['options']
+      : never
+    : never;
+
+export type GetStatusGroupMapping<T extends DatabaseNames, P extends GetStatusProperties<T>> = 
+  T extends keyof StatusPropertyMapping 
+    ? P extends keyof StatusPropertyMapping[T] 
+      ? StatusPropertyMapping[T][P]['groupMapping']
+      : never
+    : never;
+
+export type GetOptionToGroupMapping<T extends DatabaseNames, P extends GetStatusProperties<T>> = 
+  T extends keyof StatusPropertyMapping 
+    ? P extends keyof StatusPropertyMapping[T] 
+      ? StatusPropertyMapping[T][P]['optionToGroupMapping']
+      : never
+    : never;`
+        : '';
+
     return `export type DatabaseIdMapping = {
 ${mappings}
 };
@@ -163,7 +312,7 @@ ${names};
 export type GetDatabaseType<T extends keyof DatabaseIdMapping> = DatabaseIdMapping[T];
 export type GetDatabaseTypeByName<T extends DatabaseNames> = DatabaseNameMapping[T];
 ${createType}
-${updateType}`;
+${updateType}${statusPropertyMapping}${propertyHelpers}`;
   }
 
   private capitalize(str: string): string {

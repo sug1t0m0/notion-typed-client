@@ -116,9 +116,11 @@ describe('SchemaGenerator', () => {
     it('should use string enums for select in create schema', () => {
       const schema = generator.generateCreateSchema(mockDatabase);
 
+      // Status now uses oneOf structure to support both string and object formats
       const statusSchema = schema.properties.status;
-      expect(statusSchema.type).toBe('string');
-      expect(statusSchema.enum).toEqual(['Not Started', 'In Progress', 'Done']);
+      expect(statusSchema.oneOf).toBeDefined();
+      expect(statusSchema.oneOf[0].type).toBe('string');
+      expect(statusSchema.oneOf[0].enum).toEqual(['Not Started', 'In Progress', 'Done']);
 
       const prioritySchema = schema.properties.priority;
       expect(prioritySchema.type).toBe('string');
