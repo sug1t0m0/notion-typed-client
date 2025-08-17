@@ -1,6 +1,24 @@
-# CLAUDE.md
+# CLAUDE.md - AI Development Assistant Guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## 📋 Purpose of This File
+
+This file is specifically designed for AI development assistants (particularly Claude Code) working on this repository. It contains:
+- Internal architecture details and design decisions
+- Development workflows and debugging procedures
+- Implementation patterns and coding standards
+- Technical constraints and workarounds
+
+**For user-facing documentation, see [README.md](README.md)**
+
+---
+
+## 🤖 AI Assistant Instructions
+
+When working on this repository, prioritize:
+1. Maintaining type safety across all changes
+2. Following existing naming conventions (PascalCase for classes, camelCase for functions)
+3. Co-locating tests with implementation files
+4. Using explicit exports over barrel exports for better tree-shaking
 
 ## Project Overview
 
@@ -149,7 +167,47 @@ The tool expects a `notion-typed.config.ts` file exporting a `NotionTypedConfig`
 
 ## Common Development Scenarios
 
-**Adding New Property Types**: Extend `NotionPropertyType` in `src/types/config.ts` and add handling in generators
+**Adding New Property Types**: Extend `NotionPropertyType` in `src/types/Config.ts` and add handling in generators
 **Debugging Type Generation**: Check generated files in `notion-typed-codegen/` or run with example project
 **Testing Real API Integration**: Use the example project with actual Notion database
 **Schema Changes**: The tool auto-detects schema changes and prompts for config updates
+
+## Troubleshooting Guide
+
+### Common Issues and Solutions
+
+#### 1. Module Resolution Errors
+**Problem**: `Cannot find module '@sug1t0m0/notion-typed-client'`
+**Solution**: 
+- Ensure package is installed: `pnpm add -D @sug1t0m0/notion-typed-client`
+- Check that `dist/index.d.ts` exists and exports are correct
+- Verify `package.json` has correct `main` and `types` fields
+
+#### 2. Type Generation Failures
+**Problem**: Generated types don't match Notion schema
+**Debug Steps**:
+1. Check `notion-typed.config.ts` for correct database IDs
+2. Verify API key has proper permissions
+3. Run `npx notion-typed-client fetch --dry-run` to see what would be fetched
+4. Check console output for API errors
+
+#### 3. Build Errors
+**Problem**: TypeScript compilation fails
+**Common Causes**:
+- Circular dependencies between generators
+- Missing type exports in index.ts
+- Incorrect file naming (should be PascalCase for classes)
+
+#### 4. Test Failures
+**Problem**: Tests fail after changes
+**Debug Process**:
+1. Run specific test: `pnpm test src/path/to/file.test.ts`
+2. Check mock data in `src/__tests__/TestUtils.ts`
+3. Verify test environment setup in `vitest.config.ts`
+
+### Performance Optimization Tips
+
+- Use `--dry-run` flag for testing without side effects
+- Cache Notion API responses during development
+- Minimize API calls by using resolved IDs instead of names
+- Use `skipLibCheck: true` in tsconfig for faster builds

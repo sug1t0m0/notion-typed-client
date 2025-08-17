@@ -8,45 +8,45 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
 
-Notion APIクライアントに型安全性をもたらす自動生成ツール
+Type-safe code generation tool for Notion API clients
 
-## 概要
+## Overview
 
-notion-typed-clientは、Notion APIの汎用的なクライアントの型安全性の問題を解決します。データベースのスキーマ情報を取得し、TypeScriptの型定義とバリデーション機能を持つ専用APIクライアントを自動生成します。
+notion-typed-client solves the type-safety issues of generic Notion API clients. It fetches database schemas from Notion and automatically generates TypeScript type definitions and type-safe API clients with validation capabilities.
 
-### 主な特徴
+### Key Features
 
-- 🔒 **完全な型安全性** - select/multi_select/statusプロパティの実際の選択肢を型として表現
-- 🔄 **自動スキーマ同期** - Notion APIから最新のスキーマ情報を取得して型を生成
-- ✅ **ランタイムバリデーション** - AJVによる実行時の値検証
-- 🎯 **ワークフロー特化** - 特定のデータベース構造に最適化されたクライアント生成
-- 🔧 **設定の自動更新** - IDの自動解決とnotionName変更の検出
+- 🔒 **Complete Type Safety** - Represents actual options for select/multi_select/status properties as types
+- 🔄 **Automatic Schema Sync** - Fetches latest schema information from Notion API and generates types
+- ✅ **Runtime Validation** - Runtime value validation with AJV
+- 🎯 **Workflow-Specific** - Generates clients optimized for specific database structures
+- 🔧 **Auto-Configuration Updates** - Automatic ID resolution and notionName change detection
 
-## インストール
+## Installation
 
 ```bash
 npm install -D @sug1t0m0/notion-typed-client
-# または
+# or
 pnpm add -D @sug1t0m0/notion-typed-client
-# または
+# or
 yarn add -D @sug1t0m0/notion-typed-client
 ```
 
-## クイックスタート
+## Quick Start
 
-### 1. 初期設定
+### 1. Initial Setup
 
 ```bash
 npx notion-typed-client init
 ```
 
-`.env`ファイルにNotion APIキーを設定:
+Set your Notion API key in `.env` file:
 
 ```env
 NOTION_API_KEY=your_notion_api_key_here
 ```
 
-### 2. 設定ファイルの作成
+### 2. Create Configuration File
 
 `notion-typed.config.ts`:
 
@@ -56,48 +56,48 @@ import { NotionTypedConfig } from 'notion-typed-client';
 const config: NotionTypedConfig = {
   databases: [
     {
-      id: null,  // 初回はnullでOK、後で自動解決されます
+      id: null,  // OK to be null initially, will be auto-resolved later
       name: 'TaskDatabase',
-      displayName: 'タスクデータベース',
+      displayName: 'Task Database',
       notionName: 'Tasks',
       properties: [
         {
           id: null,
           name: 'title',
-          displayName: 'タイトル',
+          displayName: 'Title',
           notionName: 'Title',
           type: 'title'
         },
         {
           id: null,
           name: 'status',
-          displayName: 'ステータス',
+          displayName: 'Status',
           notionName: 'Status',
           type: 'status'
-          // optionsは自動取得されます
+          // options will be fetched automatically
         },
         {
           id: null,
           name: 'priority',
-          displayName: '優先度',
+          displayName: 'Priority',
           notionName: 'Priority',
           type: 'select'
-          // optionsは自動取得されます
+          // options will be fetched automatically
         },
         {
           id: null,
           name: 'tags',
-          displayName: 'タグ',
+          displayName: 'Tags',
           notionName: 'Tags',
           type: 'multi_select'
-          // optionsは自動取得されます
+          // options will be fetched automatically
         },
         {
           id: null,
           name: 'customField',
-          displayName: 'カスタムフィールド',
+          displayName: 'Custom Field',
           notionName: 'Custom Field',
-          type: null  // typeもNotionから自動検出されます
+          type: null  // type will also be auto-detected from Notion
         }
       ]
     }
@@ -111,18 +111,18 @@ const config: NotionTypedConfig = {
 export default config;
 ```
 
-### 3. スキーマ取得とクライアント生成
+### 3. Fetch Schema and Generate Client
 
 ```bash
-# スキーマ取得・ID解決・型生成を一括実行
+# Fetch schema, resolve IDs, and generate types in one command
 npx notion-typed-client build
 
-# または個別実行
-npx notion-typed-client fetch    # スキーマ取得・ID解決
-npx notion-typed-client generate  # 型・クライアント生成
+# Or run individually
+npx notion-typed-client fetch    # Fetch schema and resolve IDs
+npx notion-typed-client generate  # Generate types and client
 ```
 
-### 4. 生成されたクライアントの使用
+### 4. Use the Generated Client
 
 ```typescript
 import { NotionClient } from './generated/notion-client';
@@ -132,194 +132,231 @@ const client = new NotionClient({
   auth: process.env.NOTION_API_KEY
 });
 
-// 型安全なページ作成
+// Type-safe page creation
 const newTask = await client.pages.create<TaskDatabase>({
   parent: { database_id: 'your-database-id' },
   properties: {
-    title: 'New Task',           // string型
-    status: 'In Progress',        // 'Not Started' | 'In Progress' | 'Done' のみ許可
-    priority: 'High',             // 'Low' | 'Medium' | 'High' のみ許可
-    tags: ['urgent', 'review']    // 定義された選択肢のみ許可
+    title: 'New Task',           // string type
+    status: 'In Progress',        // Only 'Not Started' | 'In Progress' | 'Done' allowed
+    priority: 'High',             // Only 'Low' | 'Medium' | 'High' allowed
+    tags: ['urgent', 'review']    // Only defined options allowed
   }
 });
 
-// 型安全なクエリ
+// Type-safe query
 const tasks = await client.databases.query<TaskDatabase>({
   database_id: 'your-database-id',
   filter: {
     property: 'status',
     status: {
-      equals: 'In Progress'  // 型チェックで無効な値を防ぐ
+      equals: 'In Progress'  // Type checking prevents invalid values
     }
   }
 });
 
-// バリデーション付きページ更新
+// Page update with validation
 const updated = await client.pages.update<TaskDatabase>({
   page_id: 'page-id',
   properties: {
-    status: 'Done'  // ランタイムでも検証される
+    status: 'Done'  // Also validated at runtime
   }
 });
 ```
 
-## CLI コマンド
+## CLI Commands
 
 ### `init`
-設定ファイルのテンプレートと必要なファイルを生成します。
+Creates configuration file template and necessary files.
 
 ```bash
 npx notion-typed-client init [options]
 
 Options:
-  --config <path>  設定ファイルのパス (default: "./notion-typed.config.ts")
-  --force         既存ファイルを上書き
+  --config <path>  Configuration file path (default: "./notion-typed.config.ts")
+  --force         Overwrite existing files
 ```
 
 ### `fetch`
-Notion APIからスキーマ情報を取得し、IDの解決と設定ファイルの更新を行います。
+Fetches schema information from Notion API, resolves IDs, and updates configuration file.
 
 ```bash
 npx notion-typed-client fetch [options]
 
 Options:
-  --config <path>  設定ファイルのパス
-  --dry-run       変更を適用せずに確認のみ
+  --config <path>  Configuration file path
+  --dry-run       Preview changes without applying them
 ```
 
 ### `generate`
-取得したスキーマから型定義とクライアントコードを生成します。
+Generates type definitions and client code from fetched schema.
 
 ```bash
 npx notion-typed-client generate [options]
 
 Options:
-  --config <path>  設定ファイルのパス
-  --watch         ファイル変更を監視して自動生成
+  --config <path>  Configuration file path
+  --watch         Watch for file changes and auto-generate
 ```
 
 ### `build`
-`fetch`と`generate`を順次実行します。
+Runs `fetch` and `generate` sequentially.
 
 ```bash
 npx notion-typed-client build [options]
 ```
 
 ### `validate`
-設定とNotionの実際のスキーマとの整合性を検証します。
+Validates consistency between configuration and actual Notion schema.
 
 ```bash
 npx notion-typed-client validate [options]
 ```
 
-## 設定ファイル詳細
+## Configuration File Details
 
 ### DatabaseConfig
 
-| プロパティ | 型 | 説明 |
+| Property | Type | Description |
 |-----------|-----|------|
-| `id` | `string \| null` | データベースID（nullの場合notionNameで検索） |
-| `name` | `string` | TypeScriptでの型名 |
-| `displayName` | `string` | 日本語表示名 |
-| `notionName` | `string` | Notion上の実際の名前 |
-| `properties` | `PropertyConfig[]` | プロパティ設定の配列 |
+| `id` | `string \| null` | Database ID (searches by notionName if null) |
+| `name` | `string` | Type name in TypeScript |
+| `displayName` | `string` | Display name for logs |
+| `notionName` | `string` | Actual name in Notion |
+| `properties` | `PropertyConfig[]` | Array of property configurations |
 
 ### PropertyConfig
 
-| プロパティ | 型 | 説明 |
+| Property | Type | Description |
 |-----------|-----|------|
-| `id` | `string \| null` | プロパティID（nullの場合notionNameで検索） |
-| `name` | `string` | TypeScriptでのプロパティ名 |
-| `displayName` | `string` | 日本語表示名 |
-| `notionName` | `string` | Notion上の実際のプロパティ名 |
-| `type` | `NotionPropertyType \| null` | プロパティタイプ（nullの場合Notionから自動検出） |
+| `id` | `string \| null` | Property ID (searches by notionName if null) |
+| `name` | `string` | Property name in TypeScript |
+| `displayName` | `string` | Display name for logs |
+| `notionName` | `string` | Actual property name in Notion |
+| `type` | `NotionPropertyType \| null` | Property type (auto-detected from Notion if null) |
 
-### サポートされるプロパティタイプ
+### Supported Property Types
 
-- `title` - タイトル
-- `rich_text` - リッチテキスト
-- `number` - 数値
-- `select` - 単一選択（選択肢は自動取得）
-- `multi_select` - 複数選択（選択肢は自動取得）
-- `status` - ステータス（選択肢は自動取得）
-- `date` - 日付
-- `people` - ユーザー
-- `files` - ファイル
-- `checkbox` - チェックボックス
+- `title` - Title
+- `rich_text` - Rich Text
+- `number` - Number
+- `select` - Single Select (options auto-fetched)
+- `multi_select` - Multi Select (options auto-fetched)
+- `status` - Status (options auto-fetched)
+- `date` - Date
+- `people` - People
+- `files` - Files
+- `checkbox` - Checkbox
 - `url` - URL
-- `email` - メールアドレス
-- `phone_number` - 電話番号
-- `formula` - 数式
-- `relation` - リレーション
-- `rollup` - ロールアップ
-- `created_time` - 作成日時
-- `created_by` - 作成者
-- `last_edited_time` - 最終更新日時
-- `last_edited_by` - 最終更新者
+- `email` - Email
+- `phone_number` - Phone Number
+- `formula` - Formula
+- `relation` - Relation
+- `rollup` - Rollup
+- `created_time` - Created Time
+- `created_by` - Created By
+- `last_edited_time` - Last Edited Time
+- `last_edited_by` - Last Edited By
 
-## 自動更新機能
+## Auto-Update Features
 
-### ID解決
-初回実行時、`id: null`のエントリーは`notionName`を使って自動的にIDが解決され、設定ファイルが更新されます。
+### ID Resolution
+On first run, entries with `id: null` are automatically resolved using `notionName` and the configuration file is updated.
 
-### 名前変更検出
-既存のIDがある場合、Notion上での名前変更を検出し、設定ファイルの`notionName`を更新するか確認します。
+### Name Change Detection
+When IDs already exist, detects name changes in Notion and prompts to update `notionName` in the configuration file.
 
-### 選択肢の自動取得
-select/multi_select/statusプロパティの選択肢は、Notion APIから自動的に取得され、型定義に反映されます。手動での管理は不要です。
+### Auto-Fetching Options
+Options for select/multi_select/status properties are automatically fetched from Notion API and reflected in type definitions. No manual management needed.
 
-## 生成されるファイル
+## Generated Files
 
+By default, the following files are generated in the `./notion-typed-codegen/` directory:
+
+- `types.ts` - TypeScript type definitions
+- `client.ts` - Type-safe Notion client
+- `validators.ts` - Runtime validators
+- `schemas.json` - JSON Schema definitions
+
+## Frequently Asked Questions (FAQ)
+
+### Q: Why do I need this tool?
+**A:** The official Notion SDK is generic and doesn't provide database-specific type information. This tool generates type-safe clients based on your database structure, significantly improving the development experience.
+
+### Q: What happens when options are changed?
+**A:** Running `npx notion-typed-client build` fetches the latest schema and updates type definitions. Added, removed, or changed options are automatically reflected.
+
+### Q: Can I manage multiple databases?
+**A:** Yes, you can add multiple database configurations to the `databases` array in `notion-typed.config.ts`.
+
+### Q: Can I customize the generated code?
+**A:** Generated code is overwritten, so don't edit it directly. If customization is needed, create your own class that wraps the generated client.
+
+## Best Practices
+
+### 1. Environment Variable Management
+```bash
+# .env.local (development)
+NOTION_API_KEY=secret_development_key
+
+# .env.production (production)
+NOTION_API_KEY=secret_production_key
 ```
-src/generated/
-├── types.ts           # 型定義
-├── schemas.json       # JSON Schema
-├── validators.ts      # AJVバリデータ
-├── client.ts         # 型安全なAPIクライアント
-└── index.ts          # エクスポート用エントリーポイント
+
+### 2. CI/CD Usage
+```yaml
+# GitHub Actions example
+- name: Generate Notion types
+  env:
+    NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+  run: |
+    npx notion-typed-client build
+    npx tsc --noEmit
 ```
 
-## 設計原則
+### 3. Type Reuse
+```typescript
+// Use generated types in other files
+import type { PlansDatabase } from './notion-typed-codegen/types';
 
-1. **Notionが単一情報源** - 選択肢などの動的情報は全てNotion APIから取得
-2. **柔軟なID管理** - 初期設定時は名前で検索、運用時はIDで固定
-3. **型安全性** - コンパイル時とランタイム両方でのバリデーション
-4. **保守性** - 設定ファイルの自動同期により手動メンテナンス不要
+function processPlans(plans: PlansDatabase[]): void {
+  // Type-safe processing
+}
+```
 
-## トラブルシューティング
+## Troubleshooting
 
-### APIキーが無効
-`.env`ファイルに正しいNotion APIキーが設定されているか確認してください。
+### Invalid API Key
+Verify that the correct Notion API key is set in your `.env` file.
 
-### データベースが見つからない
-- Notion APIキーがデータベースへのアクセス権限を持っているか確認
-- `notionName`が正確に一致しているか確認（大文字小文字も区別されます）
+### Database Not Found
+- Check that your Notion API key has access permissions to the database
+- Verify that `notionName` matches exactly (case-sensitive)
 
-### 型エラー
-`npx notion-typed-client build`を実行して最新のスキーマで型を再生成してください。
+### Type Errors
+Run `npx notion-typed-client build` to regenerate types with the latest schema.
 
-## リリース管理
+## Release Management
 
-このプロジェクトは[Semantic Versioning](https://semver.org/)に従っています。
+This project follows [Semantic Versioning](https://semver.org/).
 
-### 自動リリース
+### Automatic Releases
 
-- **feat:** プレフィックスのコミットでminorバージョンが上がります
-- **fix:** プレフィックスのコミットでpatchバージョンが上がります  
-- **BREAKING CHANGE:** または `!` を含むコミットでmajorバージョンが上がります
+- **feat:** prefix commits trigger minor version bumps
+- **fix:** prefix commits trigger patch version bumps
+- **BREAKING CHANGE:** or commits with `!` trigger major version bumps
 
-### 手動リリース
+### Manual Releases
 
-GitHubの Actions タブから "Release" ワークフローを実行してバージョンタイプを選択できます。
+Run the "Release" workflow from the GitHub Actions tab to select version type.
 
-### バージョン管理
-- **MAJOR** (x.0.0): 破壊的変更
-- **MINOR** (1.x.0): 新機能追加（後方互換性あり）
-- **PATCH** (1.1.x): バグ修正
+### Version Management
+- **MAJOR** (x.0.0): Breaking changes
+- **MINOR** (1.x.0): New features (backward compatible)
+- **PATCH** (1.1.x): Bug fixes
 
 ### Conventional Commits
 
-コミットメッセージは以下の形式に従ってください：
+Commit messages should follow this format:
 
 ```
 <type>[optional scope]: <description>
@@ -329,7 +366,7 @@ GitHubの Actions タブから "Release" ワークフローを実行してバー
 [optional footer(s)]
 ```
 
-例:
+Examples:
 ```
 feat(cli): add new init command
 fix: resolve type generation bug
@@ -337,12 +374,12 @@ docs: update README with examples
 BREAKING CHANGE: remove deprecated API
 ```
 
-設定されたコミットメッセージテンプレートを使用する場合：
+To use the configured commit message template:
 ```bash
 git config commit.template .gitmessage
 ```
 
-## ライセンス
+## License
 
 MIT
 
