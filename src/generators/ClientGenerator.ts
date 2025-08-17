@@ -24,6 +24,36 @@ import type {
 } from './types';
 import { validators } from './validators';
 
+// Interface for Notion client to enable dependency injection
+interface NotionClientInterface {
+  databases: {
+    retrieve(args: { database_id: string }): Promise<any>;
+    query(args: {
+      database_id: string;
+      filter?: any;
+      sorts?: any[];
+      start_cursor?: string;
+      page_size?: number;
+    }): Promise<{
+      results: any[];
+      has_more: boolean;
+      next_cursor: string | null;
+    }>;
+  };
+  pages: {
+    create(args: {
+      parent: { database_id: string };
+      properties: any;
+    }): Promise<any>;
+    retrieve(args: { page_id: string }): Promise<any>;
+    update(args: {
+      page_id: string;
+      properties?: any;
+      archived?: boolean;
+    }): Promise<any>;
+  };
+}
+
 // Internal types for the client
 interface ResolvedPropertyConfig {
   id: string;
@@ -45,11 +75,13 @@ interface ResolvedDatabaseConfig {
 
   private generateClass(databases: ResolvedDatabaseConfig[]): string {
     return `export class NotionTypedClient {
-  private client: Client;
+  private client: NotionClientInterface;
   private databaseIds: Record<DatabaseNames, string>;
 
-  constructor(options: { auth: string }) {
-    this.client = new Client(options);
+  constructor(options: { client: NotionClientInterface }) {
+    // Use injected client (must have same interface as official Notion client)
+    this.client = options.client;
+    
     this.databaseIds = {
 ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     };
@@ -381,7 +413,7 @@ ${databases.map((db) => `      '${db.name}': ${JSON.stringify(db, null, 8).split
   /**
    * Get the underlying Notion client for advanced usage
    */
-  getClient(): Client {
+  getClient(): NotionClientInterface {
     return this.client;
   }
 }

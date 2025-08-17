@@ -10,7 +10,7 @@ export class FetchCommand {
 
   async execute(options: { config?: string; dryRun?: boolean }): Promise<void> {
     try {
-      const resolver = new SchemaResolver(options.config);
+      const resolver = new SchemaResolver({ configPath: options.config });
 
       this.logger.info('Fetching schemas from Notion...');
       const result = await resolver.resolve({ dryRun: options.dryRun });

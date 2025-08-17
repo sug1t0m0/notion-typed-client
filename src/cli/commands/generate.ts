@@ -30,7 +30,7 @@ export class GenerateCommand {
     const config = await configLoader.load();
 
     // スキーマを取得（更新なし）
-    const resolver = new SchemaResolver(configPath);
+    const resolver = new SchemaResolver({ configPath });
     this.logger.info('Loading schemas...');
     const fetchResult = await resolver.resolve({ dryRun: true });
 

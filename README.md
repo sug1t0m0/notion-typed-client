@@ -21,6 +21,7 @@ notion-typed-client solves the type-safety issues of generic Notion API clients.
 - ✅ **Runtime Validation** - Runtime value validation with AJV
 - 🎯 **Workflow-Specific** - Generates clients optimized for specific database structures
 - 🔧 **Auto-Configuration Updates** - Automatic ID resolution and notionName change detection
+- 🔌 **Dependency Injection** - Inject custom Notion client implementations for testing and customization
 
 ## Installation
 
@@ -124,28 +125,33 @@ npx notion-typed-client generate  # Generate types and client
 
 ### 4. Use the Generated Client
 
-```typescript
-import { NotionClient } from './generated/notion-client';
-import { TaskDatabase } from './generated/types';
+#### Basic Usage
 
-const client = new NotionClient({
-  auth: process.env.NOTION_API_KEY
+```typescript
+import { NotionTypedClient } from './generated/client';
+import { TaskDatabase } from './generated/types';
+import { Client } from '@notionhq/client';
+
+// Create official Notion client
+const notionClient = new Client({
+  auth: process.env.NOTION_API_KEY!
+});
+
+// Use with generated typed client
+const client = new NotionTypedClient({
+  client: notionClient
 });
 
 // Type-safe page creation
-const newTask = await client.pages.create<TaskDatabase>({
-  parent: { database_id: 'your-database-id' },
-  properties: {
-    title: 'New Task',           // string type
-    status: 'In Progress',        // Only 'Not Started' | 'In Progress' | 'Done' allowed
-    priority: 'High',             // Only 'Low' | 'Medium' | 'High' allowed
-    tags: ['urgent', 'review']    // Only defined options allowed
-  }
+const newTask = await client.createPage('TaskDatabase', {
+  title: 'New Task',           // string type
+  status: 'In Progress',        // Only 'Not Started' | 'In Progress' | 'Done' allowed
+  priority: 'High',             // Only 'Low' | 'Medium' | 'High' allowed
+  tags: ['urgent', 'review']    // Only defined options allowed
 });
 
 // Type-safe query
-const tasks = await client.databases.query<TaskDatabase>({
-  database_id: 'your-database-id',
+const tasks = await client.queryDatabase('TaskDatabase', {
   filter: {
     property: 'status',
     status: {
@@ -155,11 +161,84 @@ const tasks = await client.databases.query<TaskDatabase>({
 });
 
 // Page update with validation
-const updated = await client.pages.update<TaskDatabase>({
-  page_id: 'page-id',
-  properties: {
-    status: 'Done'  // Also validated at runtime
+const updated = await client.updatePage('page-id', 'TaskDatabase', {
+  status: 'Done'  // Also validated at runtime
+});
+```
+
+#### Dependency Injection (Advanced)
+
+You can inject your own Notion client implementation for testing or customization:
+
+```typescript
+import { NotionTypedClient } from './generated/client';
+import type { NotionClientInterface } from '@sug1t0m0/notion-typed-client';
+
+// Mock client for testing
+const mockClient: NotionClientInterface = {
+  databases: {
+    retrieve: jest.fn(),
+    query: jest.fn(),
+  },
+  pages: {
+    create: jest.fn(),
+    retrieve: jest.fn(),
+    update: jest.fn(),
+  },
+  search: jest.fn(),
+};
+
+// Use injected client
+const client = new NotionTypedClient({
+  client: mockClient
+});
+
+// Your custom client with logging, retry logic, etc.
+class CustomNotionClient implements NotionClientInterface {
+  private baseClient: Client;
+  
+  constructor(options: { auth: string }) {
+    this.baseClient = new Client(options);
   }
+  
+  databases = {
+    retrieve: async (args) => {
+      console.log('Retrieving database:', args.database_id);
+      return this.baseClient.databases.retrieve(args);
+    },
+    query: async (args) => {
+      console.log('Querying database:', args.database_id);
+      return this.baseClient.databases.query(args);
+    },
+  };
+  
+  pages = {
+    create: async (args) => {
+      console.log('Creating page');
+      return this.baseClient.pages.create(args);
+    },
+    retrieve: async (args) => {
+      console.log('Retrieving page:', args.page_id);
+      return this.baseClient.pages.retrieve(args);
+    },
+    update: async (args) => {
+      console.log('Updating page:', args.page_id);
+      return this.baseClient.pages.update(args);
+    },
+  };
+  
+  search = async (args) => {
+    console.log('Searching:', args.query);
+    return this.baseClient.search(args);
+  };
+}
+
+const customClient = new CustomNotionClient({
+  auth: process.env.NOTION_API_KEY!
+});
+
+const client = new NotionTypedClient({
+  client: customClient
 });
 ```
 

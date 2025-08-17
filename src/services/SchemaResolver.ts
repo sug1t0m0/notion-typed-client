@@ -1,4 +1,5 @@
 import * as readline from 'node:readline';
+import type { NotionClientInterface } from '../interfaces';
 import type { FetchResult } from '../types';
 import { ConfigLoader, ConfigUpdater, Logger } from '../utils';
 import { NotionFetcher } from './NotionFetcher';
@@ -8,10 +9,13 @@ export class SchemaResolver {
   private configLoader: ConfigLoader;
   private fetcher: NotionFetcher;
 
-  constructor(configPath?: string, apiKey?: string) {
+  constructor(options?: {
+    configPath?: string;
+    client?: NotionClientInterface;
+  }) {
     this.logger = Logger.create('SchemaResolver');
-    this.configLoader = new ConfigLoader(configPath);
-    this.fetcher = new NotionFetcher(apiKey);
+    this.configLoader = new ConfigLoader(options?.configPath);
+    this.fetcher = new NotionFetcher(options?.client);
   }
 
   async resolve(options: { dryRun?: boolean } = {}): Promise<FetchResult> {
