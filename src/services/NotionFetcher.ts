@@ -1,4 +1,5 @@
 import { Client } from '@notionhq/client';
+import type { NotionClientInterface } from '../interfaces';
 import type {
   DatabaseConfig,
   DatabaseSchema,
@@ -8,7 +9,6 @@ import type {
   ResolvedDatabaseConfig,
   ResolvedPropertyConfig,
 } from '../types';
-import type { NotionClientInterface } from '../interfaces';
 import { Logger } from '../utils';
 
 export class NotionFetcher {

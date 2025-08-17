@@ -1,6 +1,6 @@
 import * as readline from 'node:readline';
-import type { FetchResult } from '../types';
 import type { NotionClientInterface } from '../interfaces';
+import type { FetchResult } from '../types';
 import { ConfigLoader, ConfigUpdater, Logger } from '../utils';
 import { NotionFetcher } from './NotionFetcher';
 

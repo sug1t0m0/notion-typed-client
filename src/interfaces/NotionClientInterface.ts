@@ -11,7 +11,7 @@ export interface NotionClientInterface {
      * Retrieve database schema
      */
     retrieve(args: { database_id: string }): Promise<any>;
-    
+
     /**
      * Query database pages
      */
@@ -35,24 +35,17 @@ export interface NotionClientInterface {
     /**
      * Create a new page
      */
-    create(args: {
-      parent: { database_id: string };
-      properties: any;
-    }): Promise<any>;
-    
+    create(args: { parent: { database_id: string }; properties: any }): Promise<any>;
+
     /**
      * Retrieve a page
      */
     retrieve(args: { page_id: string }): Promise<any>;
-    
+
     /**
      * Update a page
      */
-    update(args: {
-      page_id: string;
-      properties?: any;
-      archived?: boolean;
-    }): Promise<any>;
+    update(args: { page_id: string; properties?: any; archived?: boolean }): Promise<any>;
   };
 
   /**
