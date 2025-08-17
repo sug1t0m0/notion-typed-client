@@ -54,11 +54,18 @@ pnpm generate # 型定義とクライアントを生成
 生成されたクライアントを使ってNotionデータベースを操作：
 
 ```typescript
+import { Client } from '@notionhq/client';
 import { NotionTypedClient } from './generated/client';
 import type { CreatePlansDatabase } from './generated/types';
 
-const client = new NotionTypedClient({
+// 公式Notionクライアントを作成
+const notionClient = new Client({
   auth: process.env.NOTION_API_KEY!
+});
+
+// 型安全なクライアントに注入
+const client = new NotionTypedClient({
+  client: notionClient
 });
 
 // 型安全なデータ作成
@@ -83,8 +90,10 @@ await client.createPage('PlansDatabase', newPlan);
 
 ### サンプルコード
 - `test-with-notion-client.ts` - @notionhq/client を使用した例
-- `test-with-typed-client.ts` - notion-typed-client を使用した例  
+- `test-with-typed-client.ts` - notion-typed-client を使用した例（依存性注入対応）
 - `test-create-data.ts` - 型安全クライアントの基本的な使用例
+- `test-with-custom-client.ts` - カスタムクライアント（ロギング機能付き）の例
+- `test-with-mock.ts` - モッククライアントを使用したテストの例
 
 ### 生成されるファイル（generated/）
 - `types.ts` - データベースの型定義
@@ -102,7 +111,9 @@ await client.createPage('PlansDatabase', newPlan);
   "build": "fetchとgenerateを順番に実行",
   "test:notion": "@notionhq/client を使ったテストを実行",
   "test:typed": "notion-typed-client を使ったテストを実行",
-  "test:create": "型安全クライアントの基本テストを実行"
+  "test:create": "型安全クライアントの基本テストを実行",
+  "test:custom": "カスタムクライアントのテストを実行",
+  "test:mock": "モッククライアントのテストを実行"
 }
 ```
 

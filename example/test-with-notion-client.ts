@@ -1,5 +1,5 @@
-// @notionhq/client を使用したサンプル
-// 標準のNotion APIクライアントで1時間会議データを作成
+// Example using @notionhq/client
+// Create a 1-hour meeting data using the standard Notion API client
 require('dotenv').config();
 
 import { Client } from '@notionhq/client';
@@ -12,7 +12,7 @@ async function testSimpleCreate() {
   console.log('Creating data with direct Notion API...\n');
 
   try {
-    // プロパティを直接Notion API形式で作成
+    // Create properties directly in Notion API format
     const result = await notion.pages.create({
       parent: { database_id: '22add72d0571805fbf1cd6ac883716c0' },
       properties: {
@@ -30,14 +30,14 @@ async function testSimpleCreate() {
         },
         開始日時: {
           date: {
-            start: '2025-08-15T14:00:00+09:00', // 2時開始
-            end: '2025-08-15T15:00:00+09:00', // 3時終了（1時間）
+            start: '2025-08-15T14:00:00+09:00', // 2:00 PM start
+            end: '2025-08-15T15:00:00+09:00', // 3:00 PM end (1 hour)
           },
         },
         終了日時: {
           date: {
-            start: '2025-08-15T14:00:00+09:00', // 2時開始
-            end: '2025-08-15T15:00:00+09:00', // 3時終了（1時間）
+            start: '2025-08-15T14:00:00+09:00', // 2:00 PM start
+            end: '2025-08-15T15:00:00+09:00', // 3:00 PM end (1 hour)
           },
         },
       },
@@ -52,7 +52,7 @@ async function testSimpleCreate() {
         : 'Unknown'
     );
 
-    // 作成されたページを取得
+    // Retrieve the created page
     console.log('\n🔍 Retrieving page...');
     const page = await notion.pages.retrieve({ page_id: result.id });
 
@@ -95,16 +95,16 @@ async function testSimpleCreate() {
 testSimpleCreate();
 
 /* 
-【標準のNotion APIクライアントの特徴】
-1. 汎用的でシンプルなAPI
-2. 任意のデータベース構造に対応
-3. Notionの全機能にアクセス可能
-4. 軽量で依存関係が少ない
+【Standard Notion API Client Features】
+1. General-purpose and simple API
+2. Supports any database structure
+3. Access to all Notion features
+4. Lightweight with fewer dependencies
 
-📝 参考: test-with-typed-client.ts では追加で以下を提供
-1. 設定ファイルによるID管理
-2. TypeScript型安全性
-3. プロパティ名の自動補完
-4. 選択肢の型制約
-5. スキーマの自動同期
+📝 See test-with-typed-client.ts for additional features:
+1. ID management through configuration files
+2. TypeScript type safety
+3. Auto-completion for property names
+4. Type constraints for select options
+5. Automatic schema synchronization
 */
