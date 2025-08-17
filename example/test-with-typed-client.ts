@@ -1,28 +1,36 @@
-// notion-typed-client を使用したサンプル
-// 型安全なクライアントで1時間会議データを作成
+// Example using notion-typed-client
+// Create a 1-hour meeting data using the type-safe client
 require('dotenv').config();
 
-// 生成されたクライアントとタイプをインポート
+// Import required modules
+import { Client } from '@notionhq/client';
+// Import generated client and types
 import { NotionTypedClient } from './notion-typed-codegen/client';
 import type { CreatePlansDatabase } from './notion-typed-codegen/types';
 
 async function testTypedCreate() {
-  const client = new NotionTypedClient({
+  // First create the official Notion client
+  const notionClient = new Client({
     auth: process.env.NOTION_API_KEY!,
+  });
+
+  // Inject into the type-safe client
+  const client = new NotionTypedClient({
+    client: notionClient,
   });
 
   console.log('Creating data with typed Notion client...\n');
 
   try {
-    // 型安全なデータ作成（test-before-raw-api.ts と同じ内容）
+    // Create type-safe data
     const newPlan: CreatePlansDatabase = {
       name: '1時間会議（14:00-15:00） ' + new Date().toLocaleDateString('ja-JP'),
-      multiSelect: ['あ', 'う'], // 型安全：選択肢が制限される
+      multiSelect: ['あ', 'う'], // Type-safe: options are restricted
       startDate: {
-        start: '2025-08-16T14:00:00+09:00', // 14:00開始
+        start: '2025-08-16T14:00:00+09:00', // 2:00 PM start
       },
       endDate: {
-        start: '2025-08-16T15:00:00+09:00', // 15:00終了（1時間）
+        start: '2025-08-16T15:00:00+09:00', // 3:00 PM end (1 hour)
       },
     };
 
@@ -33,19 +41,19 @@ async function testTypedCreate() {
     console.log('  End Date:', newPlan.endDate?.start);
     console.log();
 
-    // データベースに追加（型チェック済み）
+    // Add to database (type-checked)
     const result = await client.createPage('PlansDatabase', newPlan);
 
     console.log('✅ Successfully created page!');
     console.log('  Page ID:', result.id);
     console.log('  Created:', new Date(result.created_time).toLocaleString('ja-JP'));
 
-    // 作成されたページを取得して確認（型安全）
+    // Retrieve and verify the created page (type-safe)
     console.log('\n🔍 Retrieving created page...');
     const retrievedPage = await client.getPage(result.id, 'PlansDatabase');
 
     console.log('📋 Retrieved page properties:');
-    console.log('  Name:', retrievedPage.properties.name); // 型安全なアクセス
+    console.log('  Name:', retrievedPage.properties.name); // Type-safe access
     console.log(
       '  MultiSelect:',
       retrievedPage.properties.multiSelect?.map((option) => option.name)
@@ -73,19 +81,19 @@ async function testTypedCreate() {
 testTypedCreate();
 
 /*
-【notion-typed-client の追加機能】
-1. 設定ファイルでデータベース管理
-2. TypeScript型定義の自動生成
-3. プロパティの自動補完
-4. 選択肢の型制約（'あ' | 'い' | 'う'）
-5. コンパイル時の型チェック
-6. ランタイムバリデーション
-7. APIレスポンスの型安全なアクセス
+【notion-typed-client Additional Features】
+1. Database management through configuration files
+2. Automatic TypeScript type generation
+3. Auto-completion for properties
+4. Type constraints for select options ('あ' | 'い' | 'う')
+5. Compile-time type checking
+6. Runtime validation
+7. Type-safe access to API responses
 
-📝 参考: test-with-notion-client.ts の開発課題を解決
-- 各プロパティの型を手動で調べる必要がある
-- 型の安全性を保つのが難しい
-- プロパティアクセスでtypoのリスク
-- 選択肢が不明（「あ」「い」「う」が有効かわからない）
-- データベース構造変更時の手動メンテナンス
+📝 Solves development challenges from test-with-notion-client.ts:
+- No need to manually research property types
+- Easier to maintain type safety
+- Eliminates typo risks in property access
+- Clear visibility of valid options (whether 'あ', 'い', 'う' are valid)
+- Automatic maintenance when database structure changes
 */
