@@ -15,6 +15,9 @@ export class TypeGenerator {
     // 基本的な型定義を追加
     types.push(this.generateBaseTypes());
 
+    // 基本フィルター型を一度だけ追加
+    types.push(this.generateBasicFilterTypes());
+
     // 各データベースの型を生成
     for (const database of databases) {
       const dbTypes = await this.generateDatabaseTypes(database);
@@ -121,6 +124,12 @@ export type NotionStatusGroup = {
       types.push(groupTypes);
     }
 
+    // Filter型を生成
+    const filterTypes = this.generateFilterTypes(database);
+    if (filterTypes) {
+      types.push(filterTypes);
+    }
+
     return types.join('\n\n');
   }
 
@@ -215,6 +224,279 @@ export type NotionStatusGroup = {
     return groupTypes.length > 0 ? groupTypes.join('\n\n') : null;
   }
 
+  private generateFilterTypes(database: ResolvedDatabaseConfig): string | null {
+    const filterTypes: string[] = [];
+
+    // Property-specific filter types
+    const propertyFilterTypes = this.generatePropertyFilterTypes(database);
+    if (propertyFilterTypes) {
+      filterTypes.push(propertyFilterTypes);
+    }
+
+    // Main database filter type
+    const mainFilterType = this.generateDatabaseFilterType(database);
+    filterTypes.push(mainFilterType);
+
+    return filterTypes.join('\n\n');
+  }
+
+  private generateBasicFilterTypes(): string {
+    return `// Basic filter condition types - mutually exclusive conditions
+export type TextFilter = 
+  | { equals: string }
+  | { does_not_equal: string }
+  | { contains: string }
+  | { does_not_contain: string }
+  | { starts_with: string }
+  | { ends_with: string }
+  | { is_empty: true }
+  | { is_not_empty: true };
+
+export type NumberFilter = 
+  | { equals: number }
+  | { does_not_equal: number }
+  | { greater_than: number }
+  | { less_than: number }
+  | { greater_than_or_equal_to: number }
+  | { less_than_or_equal_to: number }
+  | { is_empty: true }
+  | { is_not_empty: true };
+
+export type CheckboxFilter = 
+  | { equals: boolean }
+  | { does_not_equal: boolean };
+
+export type DateFilter = 
+  | { equals: string }
+  | { before: string }
+  | { after: string }
+  | { on_or_before: string }
+  | { on_or_after: string }
+  | { past_week: Record<string, never> }
+  | { past_month: Record<string, never> }
+  | { past_year: Record<string, never> }
+  | { next_week: Record<string, never> }
+  | { next_month: Record<string, never> }
+  | { next_year: Record<string, never> }
+  | { is_empty: true }
+  | { is_not_empty: true };
+
+export type SelectFilter<T extends string> = 
+  | { equals: T }
+  | { does_not_equal: T }
+  | { is_empty: true }
+  | { is_not_empty: true };
+
+export type MultiSelectFilter<T extends string> = 
+  | { contains: T }
+  | { does_not_contain: T }
+  | { is_empty: true }
+  | { is_not_empty: true };
+
+// People and relation filters
+export type PeopleFilter = 
+  | { contains: string }
+  | { does_not_contain: string }
+  | { is_empty: true }
+  | { is_not_empty: true };
+
+export type RelationFilter = 
+  | { contains: string }
+  | { does_not_contain: string }
+  | { is_empty: true }
+  | { is_not_empty: true };
+
+// Formula filters (depends on formula return type)
+export type FormulaFilter = 
+  | { string: TextFilter }
+  | { checkbox: CheckboxFilter }
+  | { number: NumberFilter }
+  | { date: DateFilter };
+
+// Rollup filters (depends on rollup property type)
+export type RollupFilter = 
+  | { any: TextFilter | NumberFilter | DateFilter | CheckboxFilter }
+  | { every: TextFilter | NumberFilter | DateFilter | CheckboxFilter }
+  | { none: TextFilter | NumberFilter | DateFilter | CheckboxFilter }
+  | { string: TextFilter }
+  | { number: NumberFilter }
+  | { date: DateFilter }
+  | { checkbox: CheckboxFilter };
+
+// Timestamp filters (for created_time, last_edited_time)
+export type TimestampFilter = 
+  | { equals: string }
+  | { before: string }
+  | { after: string }
+  | { on_or_before: string }
+  | { on_or_after: string }
+  | { past_week: Record<string, never> }
+  | { past_month: Record<string, never> }
+  | { past_year: Record<string, never> }
+  | { next_week: Record<string, never> }
+  | { next_month: Record<string, never> }
+  | { next_year: Record<string, never> };
+
+// Unique ID filters
+export type UniqueIdFilter = 
+  | { equals: number }
+  | { does_not_equal: number }
+  | { greater_than: number }
+  | { less_than: number }
+  | { greater_than_or_equal_to: number }
+  | { less_than_or_equal_to: number };`;
+  }
+
+  private generatePropertyFilterTypes(database: ResolvedDatabaseConfig): string | null {
+    const propertyFilters: string[] = [];
+
+    for (const prop of database.properties) {
+      const propertyName = this.capitalize(prop.name);
+      let filterType: string;
+
+      switch (prop.type) {
+        case 'title':
+        case 'rich_text':
+        case 'url':
+        case 'email':
+        case 'phone_number':
+          filterType = 'TextFilter';
+          break;
+        case 'number':
+          filterType = 'NumberFilter';
+          break;
+        case 'checkbox':
+          filterType = 'CheckboxFilter';
+          break;
+        case 'date':
+          filterType = 'DateFilter';
+          break;
+        case 'created_time':
+        case 'last_edited_time':
+          filterType = 'TimestampFilter';
+          break;
+        case 'people':
+        case 'created_by':
+        case 'last_edited_by':
+          filterType = 'PeopleFilter';
+          break;
+        case 'relation':
+          filterType = 'RelationFilter';
+          break;
+        case 'formula':
+          filterType = 'FormulaFilter';
+          break;
+        case 'rollup':
+          filterType = 'RollupFilter';
+          break;
+        case 'select':
+        case 'status':
+          if (prop.options && prop.options.length > 0) {
+            const optionsType = `${database.name}${propertyName}Options`;
+            filterType = `SelectFilter<${optionsType}>`;
+          } else {
+            filterType = 'SelectFilter<string>';
+          }
+          break;
+        case 'multi_select':
+          if (prop.options && prop.options.length > 0) {
+            const optionsType = `${database.name}${propertyName}Options`;
+            filterType = `MultiSelectFilter<${optionsType}>`;
+          } else {
+            filterType = 'MultiSelectFilter<string>';
+          }
+          break;
+        case 'unique_id':
+          filterType = 'UniqueIdFilter';
+          break;
+        default:
+          continue; // Skip unsupported property types
+      }
+
+      const propertyFilterName = `${database.name}${propertyName}PropertyFilter`;
+      propertyFilters.push(`export type ${propertyFilterName} = {
+  property: '${prop.name}';
+  ${prop.type}: ${filterType};
+};`);
+    }
+
+    return propertyFilters.length > 0 ? propertyFilters.join('\n\n') : null;
+  }
+
+  private generateDatabaseFilterType(database: ResolvedDatabaseConfig): string {
+    const supportedPropertyTypes = [
+      'title',
+      'rich_text',
+      'url',
+      'email',
+      'phone_number',
+      'number',
+      'checkbox',
+      'date',
+      'created_time',
+      'last_edited_time',
+      'people',
+      'created_by',
+      'last_edited_by',
+      'relation',
+      'formula',
+      'rollup',
+      'select',
+      'status',
+      'multi_select',
+      'unique_id',
+    ];
+
+    const propertyFilterTypes: string[] = [];
+
+    for (const prop of database.properties) {
+      if (supportedPropertyTypes.includes(prop.type)) {
+        const propertyName = this.capitalize(prop.name);
+        propertyFilterTypes.push(`${database.name}${propertyName}PropertyFilter`);
+      }
+    }
+
+    const filterTypeName = `${database.name}Filter`;
+
+    if (propertyFilterTypes.length === 0) {
+      return `export type ${filterTypeName} = Record<string, never>;`;
+    }
+
+    // Add special timestamp filters that don't require property field
+    const specialFilters = ['TimestampCreatedTimeFilter', 'TimestampLastEditedTimeFilter'];
+
+    // Create base filter type without compound filter to avoid circular reference
+    const baseFilterTypeName = `${filterTypeName}Base`;
+
+    return `// Special timestamp filters (no property field required)
+export type TimestampCreatedTimeFilter = {
+  timestamp: 'created_time';
+  created_time: TimestampFilter;
+};
+
+export type TimestampLastEditedTimeFilter = {
+  timestamp: 'last_edited_time';
+  last_edited_time: TimestampFilter;
+};
+
+// Base filter type without compound filters
+export type ${baseFilterTypeName} = 
+  | ${propertyFilterTypes.join('\n  | ')}
+  | ${specialFilters.join('\n  | ')};
+
+// Compound filter type that can contain nested filters
+export type CompoundFilter<T> = {
+  and?: (T | CompoundFilter<T>)[];
+} | {
+  or?: (T | CompoundFilter<T>)[];
+};
+
+// Main filter type with compound filter support
+export type ${filterTypeName} = 
+  | ${baseFilterTypeName}
+  | CompoundFilter<${baseFilterTypeName}>;`;
+  }
+
   private generateDatabaseMapping(databases: ResolvedDatabaseConfig[]): string {
     const mappings = databases.map((db) => `  '${db.id}': ${db.name};`).join('\n');
     const names = databases.map((db) => `  | '${db.name}'`).join('\n');
@@ -229,6 +511,11 @@ export type NotionStatusGroup = {
       .map((db) => `T extends '${db.name}' ? Update${db.name} :`)
       .join('\n  ');
     const updateType = `export type GetUpdateType<T extends DatabaseNames> = ${updateConditions}\n  never;`;
+
+    const filterConditions = databases
+      .map((db) => `T extends '${db.name}' ? ${db.name}Filter :`)
+      .join('\n  ');
+    const filterType = `export type GetFilterType<T extends DatabaseNames> = ${filterConditions}\n  never;`;
 
     const nameToTypeMapping = databases.map((db) => `  '${db.name}': ${db.name};`).join('\n');
 
@@ -312,7 +599,8 @@ ${names};
 export type GetDatabaseType<T extends keyof DatabaseIdMapping> = DatabaseIdMapping[T];
 export type GetDatabaseTypeByName<T extends DatabaseNames> = DatabaseNameMapping[T];
 ${createType}
-${updateType}${statusPropertyMapping}${propertyHelpers}`;
+${updateType}
+${filterType}${statusPropertyMapping}${propertyHelpers}`;
   }
 
   private capitalize(str: string): string {

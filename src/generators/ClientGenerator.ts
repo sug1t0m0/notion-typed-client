@@ -10,7 +10,7 @@ export class ClientGenerator {
 
   private generateImports(databases: ResolvedDatabaseConfig[]): string {
     const typeImports = databases
-      .flatMap((db) => [db.name, `Create${db.name}`, `Update${db.name}`])
+      .flatMap((db) => [db.name, `Create${db.name}`, `Update${db.name}`, `${db.name}Filter`])
       .join(', ');
 
     return `import { Client } from '@notionhq/client';
@@ -21,6 +21,7 @@ import type {
   GetDatabaseTypeByName,
   GetCreateType,
   GetUpdateType,
+  GetFilterType,
   GetStatusProperties,
   GetStatusGroups,
   GetStatusOptions,
@@ -160,7 +161,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   async queryDatabase<T extends DatabaseNames>(
     databaseName: T,
     args?: {
-      filter?: any;
+      filter?: GetFilterType<T>;
       sorts?: any[];
       start_cursor?: string;
       page_size?: number;
@@ -176,9 +177,18 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   }> {
     const databaseId = this.getDatabaseId(databaseName);
     
+    // Convert filter property names from code names to Notion names
+    let processedArgs = args;
+    if (args?.filter) {
+      processedArgs = {
+        ...args,
+        filter: this.convertFilterToNotion(databaseName, args.filter)
+      };
+    }
+    
     const response = await this.client.databases.query({
       database_id: databaseId,
-      ...args
+      ...processedArgs
     });
     
     // Convert response properties to typed format
@@ -225,6 +235,45 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
       page_id: pageId,
       archived: true
     });
+  }
+
+  /**
+   * Convert filter to Notion API format
+   */
+  private convertFilterToNotion(databaseName: string, filter: any): any {
+    if (!filter) return filter;
+    
+    // Handle compound filters (and/or)
+    if ('and' in filter && Array.isArray(filter.and)) {
+      return {
+        and: filter.and.map((f: any) => this.convertFilterToNotion(databaseName, f))
+      };
+    }
+    
+    if ('or' in filter && Array.isArray(filter.or)) {
+      return {
+        or: filter.or.map((f: any) => this.convertFilterToNotion(databaseName, f))
+      };
+    }
+    
+    // Handle property filters
+    if ('property' in filter) {
+      const config = this.getDatabaseConfig(databaseName);
+      const propConfig = config?.properties.find(p => p.name === filter.property);
+      
+      if (propConfig) {
+        const convertedFilter = { ...filter };
+        convertedFilter.property = propConfig.notionName;
+        return convertedFilter;
+      }
+    }
+    
+    // Handle timestamp filters (no property conversion needed)
+    if ('timestamp' in filter) {
+      return filter;
+    }
+    
+    return filter;
   }
 
   /**
