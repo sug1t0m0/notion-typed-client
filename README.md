@@ -150,13 +150,23 @@ const newTask = await client.createPage('TaskDatabase', {
   tags: ['urgent', 'review']    // Only defined options allowed
 });
 
-// Type-safe query
+// Type-safe query with filter support
 const tasks = await client.queryDatabase('TaskDatabase', {
   filter: {
     property: 'status',
     status: {
-      equals: 'In Progress'  // Type checking prevents invalid values
+      equals: 'In Progress'  // Type-safe: only valid status options allowed
     }
+  }
+});
+
+// Compound filters (and/or) are also type-safe
+const filteredTasks = await client.queryDatabase('TaskDatabase', {
+  filter: {
+    and: [
+      { property: 'status', status: { equals: 'In Progress' } },
+      { property: 'priority', select: { equals: 'High' } }
+    ]
   }
 });
 
