@@ -8,7 +8,10 @@ export class ConfigLoader {
   constructor(configPath?: string) {
     // Try multiple config file extensions
     if (configPath) {
-      this.configPath = configPath;
+      // Always resolve relative paths to absolute paths to ensure consistent resolution
+      this.configPath = path.isAbsolute(configPath)
+        ? configPath
+        : path.resolve(process.cwd(), configPath);
     } else {
       const basePath = path.resolve(process.cwd(), 'notion-typed.config');
       // Prefer .js for faster loading, fallback to .ts

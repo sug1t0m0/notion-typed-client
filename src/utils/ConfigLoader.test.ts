@@ -169,5 +169,76 @@ describe('ConfigLoader', () => {
         path.resolve(process.cwd(), 'notion-typed.config.ts')
       );
     });
+
+    it('should resolve relative paths to absolute paths', () => {
+      const relativePath = './test-config.ts';
+      const relativeLoader = new ConfigLoader(relativePath);
+      const expectedAbsolutePath = path.resolve(process.cwd(), relativePath);
+      expect(relativeLoader.getConfigPath()).toBe(expectedAbsolutePath);
+    });
+
+    it('should keep absolute paths unchanged', () => {
+      const absolutePath = '/absolute/path/to/config.ts';
+      const absoluteLoader = new ConfigLoader(absolutePath);
+      expect(absoluteLoader.getConfigPath()).toBe(absolutePath);
+    });
+
+    it('should resolve complex relative paths correctly', () => {
+      const relativePath = '../parent/config.ts';
+      const relativeLoader = new ConfigLoader(relativePath);
+      const expectedAbsolutePath = path.resolve(process.cwd(), relativePath);
+      expect(relativeLoader.getConfigPath()).toBe(expectedAbsolutePath);
+    });
+  });
+
+  describe('relative path configuration loading', () => {
+    it('should successfully load config file using relative path', async () => {
+      // Create a config file in current directory
+      const relativeConfigPath = './relative-config.ts';
+      const absoluteConfigPath = path.resolve(process.cwd(), relativeConfigPath);
+
+      const configContent = `
+        export default {
+          databases: [
+            {
+              id: null,
+              name: 'RelativeTestDB',
+              displayName: 'Relative Test Database',
+              notionName: 'RelativeTest',
+              properties: [
+                {
+                  id: null,
+                  name: 'title',
+                  displayName: 'Title',
+                  notionName: 'Title',
+                  type: 'title'
+                }
+              ]
+            }
+          ],
+          output: {
+            path: './generated'
+          }
+        };
+      `;
+
+      // Write config file
+      fs.writeFileSync(absoluteConfigPath, configContent);
+
+      try {
+        // Create loader with relative path
+        const relativeLoader = new ConfigLoader(relativeConfigPath);
+        const config = await relativeLoader.load();
+
+        expect(config.databases).toHaveLength(1);
+        expect(config.databases[0].name).toBe('RelativeTestDB');
+        expect(config.output.path).toBe('./generated');
+      } finally {
+        // Clean up
+        if (fs.existsSync(absoluteConfigPath)) {
+          fs.unlinkSync(absoluteConfigPath);
+        }
+      }
+    });
   });
 });
