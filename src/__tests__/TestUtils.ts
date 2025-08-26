@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 export const mockDatabaseSchema = {
   id: 'mock-db-id-123',
   title: [
@@ -175,6 +177,40 @@ export const mockQueryResponse = {
   type: 'page',
   page: {},
 };
+
+export function createMockClient() {
+  return {
+    databases: {
+      retrieve: vi.fn(),
+      query: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    pages: {
+      create: vi.fn(),
+      retrieve: vi.fn(),
+      update: vi.fn(),
+    },
+    blocks: {
+      children: {
+        append: vi.fn(),
+        list: vi.fn(),
+      },
+      retrieve: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    search: vi.fn(),
+    users: {
+      list: vi.fn(),
+      retrieve: vi.fn(),
+    },
+    comments: {
+      create: vi.fn(),
+      list: vi.fn(),
+    },
+  };
+}
 
 export const mockDatabaseConfig = {
   id: null,

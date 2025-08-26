@@ -30,6 +30,13 @@ import type {
 } from './types';
 import { validators } from './validators';
 
+// Sort type definition
+interface Sort {
+  property: string;
+  direction: 'ascending' | 'descending';
+  timestamp?: 'created_time' | 'last_edited_time';
+}
+
 // Interface for Notion client to enable dependency injection
 interface NotionClientInterface {
   databases: {
@@ -37,7 +44,7 @@ interface NotionClientInterface {
     query(args: {
       database_id: string;
       filter?: any;
-      sorts?: any[];
+      sorts?: Sort[];
       start_cursor?: string;
       page_size?: number;
     }): Promise<{
@@ -162,7 +169,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     databaseName: T,
     args?: {
       filter?: GetFilterType<T>;
-      sorts?: any[];
+      sorts?: Sort[];
       start_cursor?: string;
       page_size?: number;
     }
@@ -170,19 +177,27 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     results: Array<{
       id: string;
       properties: GetDatabaseTypeByName<T>;
-      [key: string]: any;
+      created_time?: string;
+      last_edited_time?: string;
+      archived?: boolean;
+      url?: string;
+      public_url?: string | null;
+      parent?: unknown;
+      icon?: unknown;
+      cover?: unknown;
     }>;
     has_more: boolean;
     next_cursor: string | null;
   }> {
     const databaseId = this.getDatabaseId(databaseName);
     
-    // Convert filter property names from code names to Notion names
+    // Convert filter and sort property names from code names to Notion names
     let processedArgs = args;
-    if (args?.filter) {
+    if (args?.filter || args?.sorts) {
       processedArgs = {
         ...args,
-        filter: this.convertFilterToNotion(databaseName, args.filter)
+        ...(args.filter && { filter: this.convertFilterToNotion(databaseName, args.filter) }),
+        ...(args.sorts && { sorts: this.convertSortsToNotion(databaseName, args.sorts) })
       };
     }
     
@@ -212,18 +227,32 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     databaseName: T,
     args?: {
       filter?: GetFilterType<T>;
-      sorts?: any[];
+      sorts?: Sort[];
       page_size?: number;
     }
   ): Promise<Array<{
     id: string;
     properties: GetDatabaseTypeByName<T>;
-    [key: string]: any;
+    created_time?: string;
+    last_edited_time?: string;
+    archived?: boolean;
+    url?: string;
+    public_url?: string | null;
+    parent?: unknown;
+    icon?: unknown;
+    cover?: unknown;
   }>> {
     const allResults: Array<{
       id: string;
       properties: GetDatabaseTypeByName<T>;
-      [key: string]: any;
+      created_time?: string;
+      last_edited_time?: string;
+      archived?: boolean;
+      url?: string;
+      public_url?: string | null;
+      parent?: unknown;
+      icon?: unknown;
+      cover?: unknown;
     }> = [];
     
     let cursor: string | undefined = undefined;
@@ -253,13 +282,20 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     databaseName: T,
     args?: {
       filter?: GetFilterType<T>;
-      sorts?: any[];
+      sorts?: Sort[];
       page_size?: number;
     }
   ): AsyncGenerator<{
     id: string;
     properties: GetDatabaseTypeByName<T>;
-    [key: string]: any;
+    created_time?: string;
+    last_edited_time?: string;
+    archived?: boolean;
+    url?: string;
+    public_url?: string | null;
+    parent?: unknown;
+    icon?: unknown;
+    cover?: unknown;
   }, void, unknown> {
     let cursor: string | undefined = undefined;
     let hasMore = true;
@@ -289,7 +325,14 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   ): Promise<{
     id: string;
     properties: GetDatabaseTypeByName<T>;
-    [key: string]: any;
+    created_time?: string;
+    last_edited_time?: string;
+    archived?: boolean;
+    url?: string;
+    public_url?: string | null;
+    parent?: unknown;
+    icon?: unknown;
+    cover?: unknown;
   }> {
     const page = await this.client.pages.retrieve({ page_id: pageId });
     
@@ -310,6 +353,29 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     return await this.client.pages.update({
       page_id: pageId,
       archived: true
+    });
+  }
+
+  /**
+   * Convert sorts to Notion API format
+   */
+  private convertSortsToNotion(databaseName: string, sorts: Sort[]): Sort[] {
+    if (!sorts || !Array.isArray(sorts)) return sorts;
+    
+    const config = this.getDatabaseConfig(databaseName);
+    
+    return sorts.map(sort => {
+      if (sort.property) {
+        const propConfig = config?.properties.find(p => p.name === sort.property);
+        if (propConfig) {
+          return {
+            ...sort,
+            property: propConfig.notionName
+          };
+        }
+      }
+      // If no match found or timestamp sort, return as-is
+      return sort;
     });
   }
 

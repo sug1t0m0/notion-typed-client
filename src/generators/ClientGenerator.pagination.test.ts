@@ -114,12 +114,12 @@ describe('ClientGenerator - Pagination Methods', () => {
 
       // queryDatabaseAll should not accept start_cursor
       expect(code).toMatch(
-        /queryDatabaseAll[\s\S]*?args\?: \{[\s\S]*?filter\?: GetFilterType<T>;[\s\S]*?sorts\?: any\[\];[\s\S]*?page_size\?: number;[\s\S]*?\}/
+        /queryDatabaseAll[\s\S]*?args\?: \{[\s\S]*?filter\?: GetFilterType<T>;[\s\S]*?sorts\?: Sort\[\];[\s\S]*?page_size\?: number;[\s\S]*?\}/
       );
 
       // queryDatabaseIterator should not accept start_cursor
       expect(code).toMatch(
-        /queryDatabaseIterator[\s\S]*?args\?: \{[\s\S]*?filter\?: GetFilterType<T>;[\s\S]*?sorts\?: any\[\];[\s\S]*?page_size\?: number;[\s\S]*?\}/
+        /queryDatabaseIterator[\s\S]*?args\?: \{[\s\S]*?filter\?: GetFilterType<T>;[\s\S]*?sorts\?: Sort\[\];[\s\S]*?page_size\?: number;[\s\S]*?\}/
       );
     });
 

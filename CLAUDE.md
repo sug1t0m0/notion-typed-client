@@ -31,7 +31,7 @@ When working on this repository, prioritize:
    git fetch origin
    git checkout main
    git pull origin main
-   
+
    # Create feature branch following GitFlow
    git checkout -b feature/{IssueID}
    ```
@@ -78,7 +78,7 @@ When working on this repository, prioritize:
      - Breaking change example:
        ```
        feat!: change constructor signature
-       
+
        BREAKING CHANGE: Constructor now requires explicit client option
        instead of optional auth string
        ```
@@ -114,4 +114,3 @@ For detailed architecture documentation including:
 - Dependency injection architecture
 
 See [docs/architecture.md](docs/architecture.md)
-

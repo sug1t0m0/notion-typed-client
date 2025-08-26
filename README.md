@@ -176,7 +176,10 @@ const allTasks = await client.queryDatabaseAll('TaskDatabase', {
     property: 'status',
     status: { does_not_equal: 'Archived' }
   },
-  sorts: [{ property: 'priority', direction: 'descending' }]
+  sorts: [
+    { property: 'priority', direction: 'descending' },  // Code names are auto-converted
+    { property: 'dueDate', direction: 'ascending' }     // to Notion property names
+  ]
 });
 console.log(`Total tasks: ${allTasks.length}`);
 
@@ -286,6 +289,7 @@ Returns a single page of results with pagination metadata. Ideal for UI paginati
 ```typescript
 const page = await client.queryDatabase('TaskDatabase', {
   filter: { property: 'status', status: { equals: 'Active' } },
+  sorts: [{ property: 'created_time', direction: 'descending' }],
   page_size: 20,
   start_cursor: previousCursor  // For fetching next page
 });
