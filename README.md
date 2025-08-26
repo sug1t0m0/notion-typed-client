@@ -170,6 +170,30 @@ const filteredTasks = await client.queryDatabase('TaskDatabase', {
   }
 });
 
+// Fetch all pages from a database (pagination handled automatically)
+const allTasks = await client.queryDatabaseAll('TaskDatabase', {
+  filter: {
+    property: 'status',
+    status: { does_not_equal: 'Archived' }
+  },
+  sorts: [{ property: 'priority', direction: 'descending' }]
+});
+console.log(`Total tasks: ${allTasks.length}`);
+
+// Memory-efficient iteration through large datasets
+for await (const task of client.queryDatabaseIterator('TaskDatabase', {
+  filter: { property: 'status', status: { equals: 'Pending' } },
+  page_size: 50  // Process in smaller chunks
+})) {
+  // Process each task individually
+  await processTask(task);
+  
+  // Can break early if needed
+  if (shouldStop(task)) {
+    break;
+  }
+}
+
 // Page update with validation
 const updated = await client.updatePage('page-id', 'TaskDatabase', {
   status: 'Done'  // Also validated at runtime
@@ -251,6 +275,60 @@ const client = new NotionTypedClient({
   client: customClient
 });
 ```
+
+### Pagination Methods
+
+The generated client includes three methods for querying databases, each optimized for different use cases:
+
+#### `queryDatabase` - Standard pagination
+Returns a single page of results with pagination metadata. Ideal for UI pagination and controlled data fetching.
+
+```typescript
+const page = await client.queryDatabase('TaskDatabase', {
+  filter: { property: 'status', status: { equals: 'Active' } },
+  page_size: 20,
+  start_cursor: previousCursor  // For fetching next page
+});
+// page.results: Array of up to 20 items
+// page.has_more: boolean indicating if more pages exist
+// page.next_cursor: cursor for fetching the next page
+```
+
+#### `queryDatabaseAll` - Fetch all records
+Automatically fetches all pages and returns them as a single array. Best for data analysis and small to medium datasets.
+
+```typescript
+const allTasks = await client.queryDatabaseAll('TaskDatabase', {
+  filter: { property: 'status', status: { equals: 'Active' } },
+  sorts: [{ property: 'created_time', direction: 'descending' }],
+  page_size: 100  // Optional: controls internal pagination size
+});
+// allTasks: Array containing ALL matching records
+// ⚠️ Use with caution for large datasets (memory usage)
+```
+
+#### `queryDatabaseIterator` - Memory-efficient iteration
+Returns an async iterator that fetches pages on-demand. Perfect for processing large datasets without loading everything into memory.
+
+```typescript
+// Process millions of records with minimal memory usage
+for await (const task of client.queryDatabaseIterator('TaskDatabase', {
+  filter: { property: 'archived', checkbox: { equals: false } },
+  page_size: 50
+})) {
+  await sendEmailNotification(task);
+  
+  // Can exit early if needed
+  if (await shouldStopProcessing()) {
+    break;
+  }
+}
+```
+
+**When to use each method:**
+- `queryDatabase`: UI pagination, manual cursor control, specific page fetching
+- `queryDatabaseAll`: Reports, data analysis, small datasets (< 1000 items)
+- `queryDatabaseIterator`: Batch processing, ETL, large datasets, memory-constrained environments
 
 ## CLI Commands
 

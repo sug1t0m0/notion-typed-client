@@ -205,6 +205,82 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   }
 
   /**
+   * Query all pages from a database (fetches all pages automatically)
+   * ⚠️ Use with caution for large datasets as this loads all data into memory
+   */
+  async queryDatabaseAll<T extends DatabaseNames>(
+    databaseName: T,
+    args?: {
+      filter?: GetFilterType<T>;
+      sorts?: any[];
+      page_size?: number;
+    }
+  ): Promise<Array<{
+    id: string;
+    properties: GetDatabaseTypeByName<T>;
+    [key: string]: any;
+  }>> {
+    const allResults: Array<{
+      id: string;
+      properties: GetDatabaseTypeByName<T>;
+      [key: string]: any;
+    }> = [];
+    
+    let cursor: string | undefined = undefined;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const response = await this.queryDatabase(databaseName, {
+        ...args,
+        start_cursor: cursor,
+        page_size: args?.page_size || 100
+      });
+      
+      allResults.push(...response.results);
+      
+      hasMore = response.has_more;
+      cursor = response.next_cursor || undefined;
+    }
+    
+    return allResults;
+  }
+
+  /**
+   * Query a database with an async iterator for memory-efficient processing
+   * Ideal for batch processing and large datasets
+   */
+  async *queryDatabaseIterator<T extends DatabaseNames>(
+    databaseName: T,
+    args?: {
+      filter?: GetFilterType<T>;
+      sorts?: any[];
+      page_size?: number;
+    }
+  ): AsyncGenerator<{
+    id: string;
+    properties: GetDatabaseTypeByName<T>;
+    [key: string]: any;
+  }, void, unknown> {
+    let cursor: string | undefined = undefined;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const response = await this.queryDatabase(databaseName, {
+        ...args,
+        start_cursor: cursor,
+        page_size: args?.page_size || 100
+      });
+      
+      for (const item of response.results) {
+        yield item;
+      }
+      
+      hasMore = response.has_more;
+      cursor = response.next_cursor || undefined;
+    }
+  }
+
+  /**
    * Get a page by ID
    */
   async getPage<T extends DatabaseNames>(
