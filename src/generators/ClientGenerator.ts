@@ -14,6 +14,22 @@ export class ClientGenerator {
       .join(', ');
 
     return `import { Client } from '@notionhq/client';
+import type {
+  QueryDatabaseParameters,
+  QueryDatabaseResponse,
+  CreatePageParameters,
+  UpdatePageParameters,
+  GetPageParameters,
+  GetDatabaseParameters,
+  PageObjectResponse,
+  PartialPageObjectResponse,
+  DatabaseObjectResponse,
+  PartialDatabaseObjectResponse,
+  CreatePageResponse,
+  UpdatePageResponse,
+  GetPageResponse,
+  GetDatabaseResponse
+} from '@notionhq/client/build/src/api-endpoints';
 import type { 
   ${typeImports},
   DatabaseNames,
@@ -29,76 +45,6 @@ import type {
   GetOptionToGroupMapping
 } from './types';
 import { validators } from './validators';
-
-// Sort type definition
-interface Sort {
-  property: string;
-  direction: 'ascending' | 'descending';
-  timestamp?: 'created_time' | 'last_edited_time';
-}
-
-// Notion API response types
-interface NotionPage {
-  id: string;
-  object: 'page';
-  created_time: string;
-  last_edited_time: string;
-  created_by: { object: string; id: string };
-  last_edited_by: { object: string; id: string };
-  cover: unknown;
-  icon: unknown;
-  parent: { type: string; database_id?: string; page_id?: string; workspace?: boolean };
-  archived: boolean;
-  properties: Record<string, unknown>;
-  url: string;
-  public_url?: string | null;
-}
-
-interface NotionDatabase {
-  id: string;
-  object: 'database';
-  created_time: string;
-  last_edited_time: string;
-  title: Array<{ type: string; text?: { content: string; link?: unknown }; plain_text?: string }>;
-  description: Array<{ type: string; text?: { content: string; link?: unknown }; plain_text?: string }>;
-  icon: unknown;
-  cover: unknown;
-  properties: Record<string, unknown>;
-  parent: { type: string; page_id?: string; workspace?: boolean };
-  url: string;
-  archived: boolean;
-  is_inline: boolean;
-}
-
-// Interface for Notion client to enable dependency injection
-interface NotionClientInterface {
-  databases: {
-    retrieve(args: { database_id: string }): Promise<NotionDatabase>;
-    query(args: {
-      database_id: string;
-      filter?: unknown;  // Filter structure is complex and varies by database
-      sorts?: Sort[];
-      start_cursor?: string;
-      page_size?: number;
-    }): Promise<{
-      results: NotionPage[];
-      has_more: boolean;
-      next_cursor: string | null;
-    }>;
-  };
-  pages: {
-    create(args: {
-      parent: { database_id: string };
-      properties: Record<string, unknown>;
-    }): Promise<NotionPage>;
-    retrieve(args: { page_id: string }): Promise<NotionPage>;
-    update(args: {
-      page_id: string;
-      properties?: Record<string, unknown>;
-      archived?: boolean;
-    }): Promise<NotionPage>;
-  };
-}
 
 // Internal types for the client
 interface StatusGroup {
@@ -136,11 +82,11 @@ interface ResolvedDatabaseConfig {
 
   private generateClass(databases: ResolvedDatabaseConfig[]): string {
     return `export class NotionTypedClient {
-  private client: NotionClientInterface;
+  private client: Client;
   private databaseIds: Record<DatabaseNames, string>;
 
-  constructor(options: { client: NotionClientInterface }) {
-    // Use injected client (must have same interface as official Notion client)
+  constructor(options: { client: Client }) {
+    // Use injected client
     this.client = options.client;
     
     this.databaseIds = {
@@ -161,7 +107,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   async createPage<T extends DatabaseNames>(
     databaseName: T,
     properties: GetCreateType<T>
-  ): Promise<NotionPage> {
+  ): Promise<PageObjectResponse | PartialPageObjectResponse> {
     const databaseId = this.getDatabaseId(databaseName);
     
     // Validate properties
@@ -186,7 +132,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     pageId: string,
     databaseName: T,
     properties: GetUpdateType<T>
-  ): Promise<NotionPage> {
+  ): Promise<PageObjectResponse | PartialPageObjectResponse> {
     // Validate properties
     const validator = validators.update[databaseName];
     if (validator && !validator(properties)) {
@@ -209,7 +155,11 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     databaseName: T,
     args?: {
       filter?: GetFilterType<T>;
-      sorts?: Sort[];
+      sorts?: Array<{
+        property?: string;
+        timestamp?: 'created_time' | 'last_edited_time';
+        direction: 'ascending' | 'descending';
+      }>;
       start_cursor?: string;
       page_size?: number;
     }
@@ -247,7 +197,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     } as any);
     
     // Convert response properties to typed format
-    const results = response.results.map((page: NotionPage) => ({
+    const results = response.results.map((page) => ({
       ...page,
       properties: this.convertPropertiesFromNotion(databaseName, page.properties) as unknown as GetDatabaseTypeByName<T>
     }));
@@ -267,7 +217,11 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     databaseName: T,
     args?: {
       filter?: GetFilterType<T>;
-      sorts?: Sort[];
+      sorts?: Array<{
+        property?: string;
+        timestamp?: 'created_time' | 'last_edited_time';
+        direction: 'ascending' | 'descending';
+      }>;
       page_size?: number;
     }
   ): Promise<Array<{
@@ -322,7 +276,11 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     databaseName: T,
     args?: {
       filter?: GetFilterType<T>;
-      sorts?: Sort[];
+      sorts?: Array<{
+        property?: string;
+        timestamp?: 'created_time' | 'last_edited_time';
+        direction: 'ascending' | 'descending';
+      }>;
       page_size?: number;
     }
   ): AsyncGenerator<{
@@ -389,7 +347,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   /**
    * Delete a page
    */
-  async deletePage(pageId: string): Promise<NotionPage> {
+  async deletePage(pageId: string): Promise<any> {
     return await this.client.pages.update({
       page_id: pageId,
       archived: true
@@ -399,7 +357,15 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   /**
    * Convert sorts to Notion API format
    */
-  private convertSortsToNotion(databaseName: string, sorts: Sort[]): Sort[] {
+  private convertSortsToNotion(databaseName: string, sorts: Array<{
+    property?: string;
+    timestamp?: 'created_time' | 'last_edited_time';
+    direction: 'ascending' | 'descending';
+  }>): Array<{
+    property?: string;
+    timestamp?: 'created_time' | 'last_edited_time';
+    direction: 'ascending' | 'descending';
+  }> {
     if (!sorts || !Array.isArray(sorts)) return sorts;
     
     const config = this.getDatabaseConfig(databaseName);
@@ -772,7 +738,7 @@ ${databases.map((db) => `      '${db.name}': ${JSON.stringify(db, null, 8).split
   /**
    * Get the underlying Notion client for advanced usage
    */
-  getClient(): NotionClientInterface {
+  getClient(): Client {
     return this.client;
   }
 }
