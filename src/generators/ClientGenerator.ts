@@ -37,18 +37,51 @@ interface Sort {
   timestamp?: 'created_time' | 'last_edited_time';
 }
 
+// Notion API response types
+interface NotionPage {
+  id: string;
+  object: 'page';
+  created_time: string;
+  last_edited_time: string;
+  created_by: { object: string; id: string };
+  last_edited_by: { object: string; id: string };
+  cover: unknown;
+  icon: unknown;
+  parent: { type: string; database_id?: string; page_id?: string; workspace?: boolean };
+  archived: boolean;
+  properties: Record<string, unknown>;
+  url: string;
+  public_url?: string | null;
+}
+
+interface NotionDatabase {
+  id: string;
+  object: 'database';
+  created_time: string;
+  last_edited_time: string;
+  title: Array<{ type: string; text?: { content: string; link?: unknown }; plain_text?: string }>;
+  description: Array<{ type: string; text?: { content: string; link?: unknown }; plain_text?: string }>;
+  icon: unknown;
+  cover: unknown;
+  properties: Record<string, unknown>;
+  parent: { type: string; page_id?: string; workspace?: boolean };
+  url: string;
+  archived: boolean;
+  is_inline: boolean;
+}
+
 // Interface for Notion client to enable dependency injection
 interface NotionClientInterface {
   databases: {
-    retrieve(args: { database_id: string }): Promise<any>;
+    retrieve(args: { database_id: string }): Promise<NotionDatabase>;
     query(args: {
       database_id: string;
-      filter?: any;
+      filter?: unknown;  // Filter structure is complex and varies by database
       sorts?: Sort[];
       start_cursor?: string;
       page_size?: number;
     }): Promise<{
-      results: any[];
+      results: NotionPage[];
       has_more: boolean;
       next_cursor: string | null;
     }>;
@@ -56,14 +89,14 @@ interface NotionClientInterface {
   pages: {
     create(args: {
       parent: { database_id: string };
-      properties: any;
-    }): Promise<any>;
-    retrieve(args: { page_id: string }): Promise<any>;
+      properties: Record<string, unknown>;
+    }): Promise<NotionPage>;
+    retrieve(args: { page_id: string }): Promise<NotionPage>;
     update(args: {
       page_id: string;
-      properties?: any;
+      properties?: Record<string, unknown>;
       archived?: boolean;
-    }): Promise<any>;
+    }): Promise<NotionPage>;
   };
 }
 
@@ -75,13 +108,20 @@ interface StatusGroup {
   option_ids: string[];
 }
 
+interface PropertyOption {
+  id: string;
+  name: string;
+  color?: string;
+  description?: string | null;
+}
+
 interface ResolvedPropertyConfig {
   id: string;
   name: string;
   displayName: string;
   notionName: string;
   type: string;
-  options?: any[];
+  options?: PropertyOption[];
   groups?: StatusGroup[];
 }
 
@@ -121,7 +161,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   async createPage<T extends DatabaseNames>(
     databaseName: T,
     properties: GetCreateType<T>
-  ): Promise<any> {
+  ): Promise<NotionPage> {
     const databaseId = this.getDatabaseId(databaseName);
     
     // Validate properties
@@ -131,11 +171,11 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     }
     
     // Convert properties to Notion API format
-    const notionProperties = this.convertPropertiesToNotion(databaseName, properties);
+    const notionProperties = this.convertPropertiesToNotion(databaseName, properties as unknown as Record<string, unknown>);
     
     return await this.client.pages.create({
       parent: { database_id: databaseId },
-      properties: notionProperties
+      properties: notionProperties as any
     });
   }
 
@@ -146,7 +186,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     pageId: string,
     databaseName: T,
     properties: GetUpdateType<T>
-  ): Promise<any> {
+  ): Promise<NotionPage> {
     // Validate properties
     const validator = validators.update[databaseName];
     if (validator && !validator(properties)) {
@@ -154,11 +194,11 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     }
     
     // Convert properties to Notion API format
-    const notionProperties = this.convertPropertiesToNotion(databaseName, properties);
+    const notionProperties = this.convertPropertiesToNotion(databaseName, properties as unknown as Record<string, unknown>);
     
     return await this.client.pages.update({
       page_id: pageId,
-      properties: notionProperties
+      properties: notionProperties as any
     });
   }
 
@@ -192,7 +232,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     const databaseId = this.getDatabaseId(databaseName);
     
     // Convert filter and sort property names from code names to Notion names
-    let processedArgs = args;
+    let processedArgs: any = args;
     if (args?.filter || args?.sorts) {
       processedArgs = {
         ...args,
@@ -204,16 +244,16 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     const response = await this.client.databases.query({
       database_id: databaseId,
       ...processedArgs
-    });
+    } as any);
     
     // Convert response properties to typed format
-    const results = response.results.map((page: any) => ({
+    const results = response.results.map((page: NotionPage) => ({
       ...page,
-      properties: this.convertPropertiesFromNotion(databaseName, page.properties)
+      properties: this.convertPropertiesFromNotion(databaseName, page.properties) as unknown as GetDatabaseTypeByName<T>
     }));
     
     return {
-      results,
+      results: results as any,
       has_more: response.has_more,
       next_cursor: response.next_cursor
     };
@@ -339,8 +379,8 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     if ('properties' in page) {
       return {
         ...page,
-        properties: this.convertPropertiesFromNotion(databaseName, page.properties)
-      };
+        properties: this.convertPropertiesFromNotion(databaseName, page.properties) as unknown as GetDatabaseTypeByName<T>
+      } as any;
     }
     
     throw new Error('Failed to retrieve page properties');
@@ -349,7 +389,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   /**
    * Delete a page
    */
-  async deletePage(pageId: string): Promise<any> {
+  async deletePage(pageId: string): Promise<NotionPage> {
     return await this.client.pages.update({
       page_id: pageId,
       archived: true
@@ -382,47 +422,49 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   /**
    * Convert filter to Notion API format
    */
-  private convertFilterToNotion(databaseName: string, filter: any): any {
-    if (!filter) return filter;
+  private convertFilterToNotion(databaseName: string, filter: unknown): unknown {
+    if (!filter || typeof filter !== 'object') return filter;
+    
+    const filterObj = filter as Record<string, unknown>;
     
     // Handle compound filters (and/or)
-    if ('and' in filter && Array.isArray(filter.and)) {
+    if ('and' in filterObj && Array.isArray(filterObj.and)) {
       return {
-        and: filter.and.map((f: any) => this.convertFilterToNotion(databaseName, f))
+        and: filterObj.and.map((f: unknown) => this.convertFilterToNotion(databaseName, f))
       };
     }
     
-    if ('or' in filter && Array.isArray(filter.or)) {
+    if ('or' in filterObj && Array.isArray(filterObj.or)) {
       return {
-        or: filter.or.map((f: any) => this.convertFilterToNotion(databaseName, f))
+        or: filterObj.or.map((f: unknown) => this.convertFilterToNotion(databaseName, f))
       };
     }
     
     // Handle property filters
-    if ('property' in filter) {
+    if ('property' in filterObj) {
       const config = this.getDatabaseConfig(databaseName);
-      const propConfig = config?.properties.find(p => p.name === filter.property);
+      const propConfig = config?.properties.find(p => p.name === filterObj.property);
       
       if (propConfig) {
-        const convertedFilter = { ...filter };
+        const convertedFilter = { ...filterObj };
         convertedFilter.property = propConfig.notionName;
         return convertedFilter;
       }
     }
     
     // Handle timestamp filters (no property conversion needed)
-    if ('timestamp' in filter) {
-      return filter;
+    if ('timestamp' in filterObj) {
+      return filterObj;
     }
     
-    return filter;
+    return filterObj;
   }
 
   /**
    * Convert properties to Notion API format
    */
-  private convertPropertiesToNotion(databaseName: string, properties: any): any {
-    const converted: any = {};
+  private convertPropertiesToNotion(databaseName: string, properties: Record<string, unknown>): Record<string, unknown> {
+    const converted: Record<string, unknown> = {};
     const config = this.getDatabaseConfig(databaseName);
     
     for (const [key, value] of Object.entries(properties)) {
@@ -438,8 +480,8 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   /**
    * Convert properties from Notion API format
    */
-  private convertPropertiesFromNotion(databaseName: string, properties: any): any {
-    const converted: any = {};
+  private convertPropertiesFromNotion(databaseName: string, properties: Record<string, unknown>): Record<string, unknown> {
+    const converted: Record<string, unknown> = {};
     const config = this.getDatabaseConfig(databaseName);
     
     for (const [notionName, value] of Object.entries(properties)) {
@@ -455,7 +497,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   /**
    * Convert a single property to Notion API format
    */
-  private convertPropertyToNotion(config: ResolvedPropertyConfig, value: any): any {
+  private convertPropertyToNotion(config: ResolvedPropertyConfig, value: unknown): unknown {
     if (value === null || value === undefined) {
       return undefined;
     }
@@ -463,7 +505,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     switch (config.type) {
       case 'title':
         return {
-          title: [{ text: { content: value } }]
+          title: [{ text: { content: String(value) } }]
         };
       
       case 'rich_text':
@@ -477,20 +519,22 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
       case 'select':
         return { [config.type]: { name: value } };
       
-      case 'status':
+      case 'status': {
         // For status, handle both string (name only) and object (name + group) formats
-        if (typeof value === 'string') {
-          return { status: { name: value } };
-        } else if (value && typeof value === 'object' && value.name) {
+        const val = value as any;
+        if (typeof val === 'string') {
+          return { status: { name: val } };
+        } else if (val && typeof val === 'object' && val.name) {
           // Extract just the name for the API call
-          return { status: { name: value.name } };
+          return { status: { name: val.name } };
         }
-        return { status: { name: value } };
+        return { status: { name: val } };
+      }
       
       case 'multi_select':
         return {
           multi_select: Array.isArray(value) 
-            ? value.map(v => ({ name: v }))
+            ? value.map(v => ({ name: String(v) }))
             : []
         };
       
@@ -507,7 +551,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
       case 'files':
         return {
           files: Array.isArray(value)
-            ? value.map(file => ({
+            ? value.map((file: any) => ({
                 name: file.name,
                 external: { url: file.url }
               }))
@@ -541,24 +585,26 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   /**
    * Convert a single property from Notion API format
    */
-  private convertPropertyFromNotion(config: ResolvedPropertyConfig, value: any): any {
+  private convertPropertyFromNotion(config: ResolvedPropertyConfig, value: unknown): unknown {
     if (!value) return null;
+    
+    const val = value as any;
     
     switch (config.type) {
       case 'title':
-        return value.title?.[0]?.text?.content || '';
+        return val.title?.[0]?.text?.content || '';
       
       case 'rich_text':
-        return value.rich_text?.[0]?.text?.content || '';
+        return val.rich_text?.[0]?.text?.content || '';
       
       case 'number':
-        return value.number;
+        return val.number;
       
       case 'select':
-        return value[config.type];
+        return val[config.type];
       
       case 'status':
-        const statusValue = value[config.type];
+        const statusValue = val[config.type];
         if (statusValue && statusValue.name && config.groups && config.groups.length > 0) {
           // Find the group for this status option
           const group = config.groups.find(g => g.option_ids.includes(statusValue.id));
@@ -570,55 +616,55 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
         return statusValue;
       
       case 'multi_select':
-        return value.multi_select || [];
+        return val.multi_select || [];
       
       case 'date':
-        return value.date;
+        return val.date;
       
       case 'people':
-        return value.people || [];
+        return val.people || [];
       
       case 'files':
-        return value.files || [];
+        return val.files || [];
       
       case 'checkbox':
-        return value.checkbox || false;
+        return val.checkbox || false;
       
       case 'url':
-        return value.url;
+        return val.url;
       
       case 'email':
-        return value.email;
+        return val.email;
       
       case 'phone_number':
-        return value.phone_number;
+        return val.phone_number;
       
       case 'relation':
-        return value.relation || [];
+        return val.relation || [];
       
       case 'created_time':
-        return value.created_time;
+        return val.created_time;
       
       case 'created_by':
-        return value.created_by;
+        return val.created_by;
       
       case 'last_edited_time':
-        return value.last_edited_time;
+        return val.last_edited_time;
       
       case 'last_edited_by':
-        return value.last_edited_by;
+        return val.last_edited_by;
       
       case 'formula':
-        return value.formula;
+        return val.formula;
       
       case 'rollup':
-        return value.rollup;
+        return val.rollup;
       
       case 'unique_id':
-        return value.unique_id;
+        return val.unique_id;
       
       default:
-        return value;
+        return val;
     }
   }
 
@@ -667,7 +713,7 @@ ${databases.map((db) => `      '${db.name}': ${JSON.stringify(db, null, 8).split
       if (group) {
         return group.option_ids
           .map(optionId => {
-            const option = propConfig.options?.find((opt: any) => opt.id === optionId);
+            const option = propConfig.options?.find(opt => opt.id === optionId);
             return option?.name;
           })
           .filter(Boolean) as GetStatusGroupMapping<T, P>[GetStatusGroups<T, P>][];
@@ -689,7 +735,7 @@ ${databases.map((db) => `      '${db.name}': ${JSON.stringify(db, null, 8).split
     const propConfig = config?.properties.find(p => p.name === propertyName);
     
     if (propConfig?.type === 'status' && propConfig.groups && propConfig.options) {
-      const option = propConfig.options.find((opt: any) => opt.name === optionName);
+      const option = propConfig.options.find(opt => opt.name === optionName);
       if (option) {
         const group = propConfig.groups.find(g => g.option_ids.includes(option.id));
         return group?.name as GetOptionToGroupMapping<T, P>[GetStatusOptions<T, P>];

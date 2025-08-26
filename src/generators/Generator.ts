@@ -75,8 +75,8 @@ export { NotionTypedClient } from './${clientName}';
 export { validators } from './validators';
 
 // Re-export schemas if needed
-import schemas from './schemas.json';
-export { schemas };
+import * as schemasData from './schemas.json';
+export const schemas = schemasData as any;
 `;
   }
 }

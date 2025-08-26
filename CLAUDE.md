@@ -60,6 +60,11 @@ When working on this repository, prioritize:
      - Analyze error and fix issues
      - Re-run quality checks (max 3 attempts)
      - Report and stop if still failing after 3 attempts
+   - **Code Generation Validation** (if working on code generation features):
+     - Clean up any existing generated directories: `rm -rf notion-typed-codegen`
+     - Run code generation command: `node dist/cli.js generate`
+     - Type check all TypeScript files in generated directory: `npx tsc notion-typed-codegen/*.ts --noEmit --skipLibCheck`
+     - If type errors occur, fix the generator code and repeat validation
 
 2. **Change Verification**
    - Check if `any` type was added to modified code
