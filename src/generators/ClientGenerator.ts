@@ -197,10 +197,12 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     } as any);
     
     // Convert response properties to typed format
-    const results = response.results.map((page) => ({
-      ...page,
-      properties: this.convertPropertiesFromNotion(databaseName, page.properties) as unknown as GetDatabaseTypeByName<T>
-    }));
+    const results = response.results
+      .filter((page): page is PageObjectResponse => 'properties' in page)
+      .map((page) => ({
+        ...page,
+        properties: this.convertPropertiesFromNotion(databaseName, page.properties) as unknown as GetDatabaseTypeByName<T>
+      }));
     
     return {
       results: results as any,
