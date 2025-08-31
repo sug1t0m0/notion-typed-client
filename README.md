@@ -10,6 +10,8 @@
 
 Type-safe code generation tool for Notion API clients
 
+> **⚠️ Early Stage Notice:** E2E testing revealed that this library still has bugs. Thank you to everyone who has downloaded and tried it - your interest means a lot! My sincere apologies for any issues you've encountered. I'm committed to improving this library until it's production-ready for my own use cases and yours.
+
 ## Overview
 
 notion-typed-client solves the type-safety issues of generic Notion API clients. It fetches database schemas from Notion and automatically generates TypeScript type definitions and type-safe API clients with validation capabilities.

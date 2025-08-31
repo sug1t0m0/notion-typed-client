@@ -13,6 +13,20 @@ export class ClientGenerator {
       .flatMap((db) => [db.name, `Create${db.name}`, `Update${db.name}`, `${db.name}Filter`])
       .join(', ');
 
+    // Check if any database has status properties
+    const hasStatusProperties = databases.some(db => 
+      db.properties.some(prop => prop.type === 'status')
+    );
+
+    const statusImports = hasStatusProperties
+      ? `,
+  GetStatusProperties,
+  GetStatusGroups,
+  GetStatusOptions,
+  GetStatusGroupMapping,
+  GetOptionToGroupMapping`
+      : '';
+
     return `import { Client } from '@notionhq/client';
 import type {
   QueryDatabaseParameters,
@@ -37,12 +51,7 @@ import type {
   GetDatabaseTypeByName,
   GetCreateType,
   GetUpdateType,
-  GetFilterType,
-  GetStatusProperties,
-  GetStatusGroups,
-  GetStatusOptions,
-  GetStatusGroupMapping,
-  GetOptionToGroupMapping
+  GetFilterType${statusImports}
 } from './types';
 import { validators } from './validators';
 
@@ -569,7 +578,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
         return val.number;
       
       case 'select':
-        return val[config.type];
+        return val[config.type]?.name || null;
       
       case 'status':
         const statusValue = val[config.type];
@@ -608,7 +617,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
         return val.phone_number;
       
       case 'relation':
-        return val.relation || [];
+        return val.relation?.map((r: any) => r.id) || [];
       
       case 'created_time':
         return val.created_time;
