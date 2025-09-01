@@ -171,11 +171,7 @@ export const SHARED_TEST_RECORDS: TestRecord[] = [
  * Get all test records
  */
 export function getAllTestRecords(): TestRecord[] {
-  return [
-    CRUD_TEST_RECORDS.update,
-    CRUD_TEST_RECORDS.delete,
-    ...SHARED_TEST_RECORDS,
-  ];
+  return [CRUD_TEST_RECORDS.update, CRUD_TEST_RECORDS.delete, ...SHARED_TEST_RECORDS];
 }
 
 /**

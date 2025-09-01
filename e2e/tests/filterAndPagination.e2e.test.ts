@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { Client } from '@notionhq/client';
+import type { Client } from '@notionhq/client';
 import { TestLifecycle } from '../setup/testLifecycle';
 import { EXPECTED_FILTER_RESULTS } from '../fixtures/testData';
 import type { NotionTypedClient } from '../generated/E2ETestClient';
@@ -15,12 +15,12 @@ describe('Filter and Pagination E2E Tests', () => {
     // Get resources from centralized lifecycle
     const lifecycle = TestLifecycle.getInstance();
     const resources = await lifecycle.globalSetup();
-    
+
     testDatabaseId = resources.testDatabaseId;
     categoryDatabaseId = resources.categoryDatabaseId;
     client = resources.client;
     GeneratedClient = resources.GeneratedClient;
-    
+
     // Create typed client instance
     typedClient = new GeneratedClient({ client });
   });
@@ -42,7 +42,7 @@ describe('Filter and Pagination E2E Tests', () => {
 
       expect(result.results).toBeDefined();
       expect(result.results.length).toBeGreaterThanOrEqual(EXPECTED_FILTER_RESULTS.highPriority);
-      
+
       // Verify all results have high priority
       for (const page of result.results) {
         expect(page.properties.priority).toBe('高');
@@ -60,7 +60,7 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Verify all results are completed
       for (const page of result.results) {
         expect(page.properties.completed).toBe(true);
@@ -78,7 +78,7 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Verify all results have progress >= 50
       for (const page of result.results) {
         if (page.properties.progress !== null && page.properties.progress !== undefined) {
@@ -98,7 +98,7 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Verify all results have a due date
       for (const page of result.results) {
         expect(page.properties.dueDate).toBeDefined();
@@ -117,7 +117,7 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Verify all results contain 'タスク' in title
       for (const page of result.results) {
         expect(page.properties.title).toContain('タスク');
@@ -135,7 +135,7 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Verify all results have no priority
       for (const page of result.results) {
         expect(page.properties.priority).toBeNull();
@@ -165,7 +165,7 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Verify all results match both conditions
       for (const page of result.results) {
         expect(page.properties.priority).toBe('高');
@@ -194,7 +194,7 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Verify all results match at least one condition
       for (const page of result.results) {
         expect(['高', '低']).toContain(page.properties.priority);
@@ -232,7 +232,7 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Verify all results match the nested conditions
       for (const page of result.results) {
         expect(['高', '中']).toContain(page.properties.priority);
@@ -258,17 +258,17 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(firstPage.results).toBeDefined();
-      
+
       if (firstPage.has_more) {
         expect(firstPage.next_cursor).toBeDefined();
         expect(typeof firstPage.next_cursor).toBe('string');
-        
+
         // Fetch next page using cursor
         const secondPage = await typedClient.queryDatabase('E2ETestDatabase', {
           page_size: 3,
           start_cursor: firstPage.next_cursor || undefined,
         });
-        
+
         expect(secondPage.results).toBeDefined();
         // Verify pages have different content
         expect(secondPage.results[0]?.id).not.toBe(firstPage.results[0]?.id);
@@ -287,10 +287,10 @@ describe('Filter and Pagination E2E Tests', () => {
 
       expect(allPages).toBeDefined();
       expect(Array.isArray(allPages)).toBe(true);
-      
+
       // Should have fetched all incomplete tasks
       expect(allPages.length).toBeGreaterThan(0);
-      
+
       // Verify all are incomplete
       for (const page of allPages) {
         expect(page.properties.completed).toBe(false);
@@ -300,7 +300,7 @@ describe('Filter and Pagination E2E Tests', () => {
     it('should iterate through pages with queryDatabaseIterator', async () => {
       const pages: any[] = [];
       let count = 0;
-      
+
       for await (const page of typedClient.queryDatabaseIterator('E2ETestDatabase', {
         page_size: 2,
         filter: {
@@ -312,7 +312,7 @@ describe('Filter and Pagination E2E Tests', () => {
       })) {
         pages.push(page);
         count++;
-        
+
         // Test early exit
         if (count >= 5) {
           break;
@@ -320,7 +320,7 @@ describe('Filter and Pagination E2E Tests', () => {
       }
 
       expect(pages.length).toBe(5);
-      
+
       // Verify all have priority set
       for (const page of pages) {
         expect(page.properties.priority).toBeDefined();
@@ -340,7 +340,7 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Verify ascending order
       for (let i = 1; i < result.results.length; i++) {
         const prev = result.results[i - 1].properties.title;
@@ -361,10 +361,12 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Verify descending order (handling nulls)
-      const nonNullResults = result.results.filter((r) => r.properties.progress !== null && r.properties.progress !== undefined);
-      
+      const nonNullResults = result.results.filter(
+        (r) => r.properties.progress !== null && r.properties.progress !== undefined
+      );
+
       for (let i = 1; i < nonNullResults.length; i++) {
         const prev = nonNullResults[i - 1].properties.progress;
         const curr = nonNullResults[i].properties.progress;
@@ -388,10 +390,10 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Group by priority and check date ordering within each group
       const priorityGroups: { [key: string]: any[] } = {};
-      
+
       for (const page of result.results) {
         const priorityName = page.properties.priority?.name || 'none';
         if (!priorityGroups[priorityName]) {
@@ -399,11 +401,11 @@ describe('Filter and Pagination E2E Tests', () => {
         }
         priorityGroups[priorityName].push(page);
       }
-      
+
       // Verify date ordering within each priority group
       for (const pages of Object.values(priorityGroups)) {
-        const datedPages = pages.filter(p => p.properties.dueDate);
-        
+        const datedPages = pages.filter((p) => p.properties.dueDate);
+
         for (let i = 1; i < datedPages.length; i++) {
           const prev = new Date(datedPages[i - 1].properties.dueDate.start);
           const curr = new Date(datedPages[i].properties.dueDate.start);
@@ -449,7 +451,7 @@ describe('Filter and Pagination E2E Tests', () => {
 
       expect(result.results).toBeDefined();
       expect(result.results.length).toBeLessThanOrEqual(3);
-      
+
       // Verify all are incomplete
       for (const page of result.results) {
         expect(page.properties.completed).toBe(false);
@@ -483,13 +485,13 @@ describe('Filter and Pagination E2E Tests', () => {
       });
 
       expect(allPages).toBeDefined();
-      
+
       // Verify filter conditions
       for (const page of allPages) {
         expect(page.properties.progress).toBeGreaterThan(0);
         expect(page.properties.dueDate).toBeDefined();
       }
-      
+
       // Verify sort order
       for (let i = 1; i < allPages.length; i++) {
         const prev = allPages[i - 1].properties.progress;

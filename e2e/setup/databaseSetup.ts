@@ -1,9 +1,9 @@
 import { Client } from '@notionhq/client';
-import { 
-  TEST_DATABASE_PROPERTIES_BASE, 
+import {
+  TEST_DATABASE_PROPERTIES_BASE,
   CATEGORY_DATABASE_PROPERTIES,
   E2E_TEST_SCHEMA,
-  E2E_CATEGORY_SCHEMA 
+  E2E_CATEGORY_SCHEMA,
 } from '../fixtures/testSchemas';
 import { getAllTestRecords, type TestRecord } from '../fixtures/testData';
 import { Logger } from '../../src/utils/Logger';
@@ -52,7 +52,9 @@ export class DatabaseSetup {
 
       return database?.id || null;
     } catch (error) {
-      logger.error(`Failed to find test database: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Failed to find test database: ${error instanceof Error ? error.message : String(error)}`
+      );
       return null;
     }
   }
@@ -81,7 +83,9 @@ export class DatabaseSetup {
       logger.info(`Category database created: ${database.id}`);
       return database.id;
     } catch (error) {
-      logger.error(`Failed to create category database: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Failed to create category database: ${error instanceof Error ? error.message : String(error)}`
+      );
       throw error;
     }
   }
@@ -120,7 +124,9 @@ export class DatabaseSetup {
       logger.info(`Test database created with relation: ${database.id}`);
       return database.id;
     } catch (error) {
-      logger.error(`Failed to create test database: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Failed to create test database: ${error instanceof Error ? error.message : String(error)}`
+      );
       throw error;
     }
   }
@@ -130,7 +136,7 @@ export class DatabaseSetup {
    */
   async createCategories(categoryDatabaseId: string): Promise<string[]> {
     logger.info('Creating category records...');
-    
+
     const categories = [
       { name: '開発', color: '青' },
       { name: 'デザイン', color: '赤' },
@@ -165,7 +171,9 @@ export class DatabaseSetup {
         categoryIds.push(page.id);
         await this.sleep(this.rateLimitDelay);
       } catch (error) {
-        logger.error(`Failed to create category: ${category.name} - ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Failed to create category: ${category.name} - ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     }
 
@@ -177,8 +185,8 @@ export class DatabaseSetup {
    * Populate database with test data
    */
   async populateTestData(
-    databaseId: string, 
-    records: TestRecord[], 
+    databaseId: string,
+    records: TestRecord[],
     categoryIds?: string[]
   ): Promise<void> {
     logger.info(`Populating database with ${records.length} test records...`);
@@ -187,12 +195,14 @@ export class DatabaseSetup {
       const record = records[i];
       // Assign categories in round-robin fashion
       const categoryId = categoryIds ? categoryIds[i % categoryIds.length] : undefined;
-      
+
       try {
         await this.createTestRecord(databaseId, record, categoryId);
         await this.sleep(this.rateLimitDelay);
       } catch (error) {
-        logger.error(`Failed to create record: ${record.title} - ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(
+          `Failed to create record: ${record.title} - ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     }
 
@@ -203,7 +213,7 @@ export class DatabaseSetup {
    * Create a single test record
    */
   private async createTestRecord(
-    databaseId: string, 
+    databaseId: string,
     record: TestRecord,
     categoryId?: string
   ): Promise<void> {
@@ -242,16 +252,15 @@ export class DatabaseSetup {
       };
     }
 
-
     if (record.tags && record.tags.length > 0) {
       properties['タグ'] = {
-        multi_select: record.tags.map(tag => ({ name: tag })),
+        multi_select: record.tags.map((tag) => ({ name: tag })),
       };
     }
 
     if (record.assignee && record.assignee.length > 0) {
       properties['担当者'] = {
-        people: record.assignee.map(userId => ({ id: userId })),
+        people: record.assignee.map((userId) => ({ id: userId })),
       };
     }
 
@@ -312,24 +321,28 @@ export class DatabaseSetup {
 
       logger.info('Test data cleanup complete');
     } catch (error) {
-      logger.error(`Failed to cleanup test data: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Failed to cleanup test data: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
   /**
    * Setup test databases and populate with data
    */
-  async setup(parentPageId: string): Promise<{ testDatabaseId: string; categoryDatabaseId: string }> {
+  async setup(
+    parentPageId: string
+  ): Promise<{ testDatabaseId: string; categoryDatabaseId: string }> {
     // First, create or find category database
     let categoryDatabaseId = await this.findTestDatabase(E2E_CATEGORY_SCHEMA.notionName);
-    
+
     if (!categoryDatabaseId) {
       categoryDatabaseId = await this.createCategoryDatabase(parentPageId);
     } else {
       logger.info(`Using existing category database: ${categoryDatabaseId}`);
       await this.cleanupTestData(categoryDatabaseId);
     }
-    
+
     // Create categories
     const categoryIds = await this.createCategories(categoryDatabaseId);
 
@@ -339,15 +352,15 @@ export class DatabaseSetup {
     if (!testDatabaseId) {
       // Create new database with relation
       testDatabaseId = await this.createTestDatabase(parentPageId, categoryDatabaseId);
-      
+
       // Populate with test data
       await this.populateTestData(testDatabaseId, getAllTestRecords(), categoryIds);
     } else {
       logger.info(`Using existing test database: ${testDatabaseId}`);
-      
+
       // Clean up existing data
       await this.cleanupTestData(testDatabaseId);
-      
+
       // Repopulate with fresh test data
       await this.populateTestData(testDatabaseId, getAllTestRecords(), categoryIds);
     }

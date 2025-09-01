@@ -13,10 +13,7 @@ export class E2ETypeGenerator {
   /**
    * Create complete configuration with database IDs
    */
-  static createConfig(
-    testDatabaseId: string,
-    categoryDatabaseId: string
-  ): NotionTypedConfig {
+  static createConfig(testDatabaseId: string, categoryDatabaseId: string): NotionTypedConfig {
     return {
       databases: [
         {
@@ -56,18 +53,15 @@ export default config;`;
    */
   static buildTypesAndClient(configPath: string, apiKey: string, verbose = false): void {
     console.log('🔨 Building types and client...');
-    
+
     try {
-      const output = execSync(
-        `echo "y" | npx ts-node src/cli.ts build --config ${configPath}`,
-        {
-          cwd: process.cwd(),
-          encoding: 'utf-8' as BufferEncoding,
-          env: { ...process.env, NOTION_API_KEY: apiKey },
-          stdio: verbose ? 'inherit' : 'pipe',
-        }
-      );
-      
+      const output = execSync(`echo "y" | npx ts-node src/cli.ts build --config ${configPath}`, {
+        cwd: process.cwd(),
+        encoding: 'utf-8' as BufferEncoding,
+        env: { ...process.env, NOTION_API_KEY: apiKey },
+        stdio: verbose ? 'inherit' : 'pipe',
+      });
+
       if (!verbose && output) {
         console.log('✅ Types and client generated successfully');
       }
@@ -119,14 +113,14 @@ export default config;`;
     verbose = false
   ): Promise<string> {
     // Create configuration
-    const config = this.createConfig(testDatabaseId, categoryDatabaseId);
-    
+    const config = E2ETypeGenerator.createConfig(testDatabaseId, categoryDatabaseId);
+
     // Write configuration file
-    const configPath = this.writeConfig(config);
-    
+    const configPath = E2ETypeGenerator.writeConfig(config);
+
     // Build types and client
-    this.buildTypesAndClient(configPath, apiKey, verbose);
-    
+    E2ETypeGenerator.buildTypesAndClient(configPath, apiKey, verbose);
+
     return configPath;
   }
 }

@@ -121,7 +121,6 @@ export class TestLifecycle {
     console.log('✅ Global E2E test teardown complete');
   }
 
-
   /**
    * Get test resources (for use in individual tests)
    */

@@ -37,7 +37,7 @@
     }
   },
   "files": {
-    "includes": ["src/**/*"],
+    "includes": ["src/**/*", "e2e/**/*"],
     "experimentalScannerIgnores": [
       "dist/**",
       "node_modules/**",
@@ -45,6 +45,9 @@
       "notion-typed-codegen/**",
       "example/notion-typed-codegen/**",
       "example/generated/**",
+      "e2e/generated/**",
+      "e2e/.env.e2e",
+      "e2e/e2e.notion-typed.config.ts",
       "*.config.js",
       "*.config.ts"
     ]

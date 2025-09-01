@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { Client } from '@notionhq/client';
+import type { Client } from '@notionhq/client';
 import { rateLimitDelay } from '../utils/testHelpers';
 import { TestLifecycle } from '../setup/testLifecycle';
 import { CRUD_TEST_RECORDS } from '../fixtures/testData';
@@ -19,30 +19,30 @@ describe('CRUD Operations E2E Tests', () => {
     // Get resources from centralized lifecycle
     const lifecycle = TestLifecycle.getInstance();
     const resources = await lifecycle.globalSetup();
-    
+
     databaseId = resources.testDatabaseId;
     client = resources.client;
     GeneratedClient = resources.GeneratedClient;
-    
+
     // Create typed client instance
     typedClient = new GeneratedClient({ client });
-    
+
     // Find pre-existing pages for update and delete tests
     const response = await client.databases.query({
       database_id: databaseId,
       page_size: 100,
     });
-    
+
     const pages = response.results.filter((p): p is any => p.object === 'page');
-    
+
     // Find update and delete test records
-    const updatePage = pages.find((p) => 
-      p.properties['タイトル']?.title?.[0]?.text?.content === CRUD_TEST_RECORDS.update.title
+    const updatePage = pages.find(
+      (p) => p.properties['タイトル']?.title?.[0]?.text?.content === CRUD_TEST_RECORDS.update.title
     );
-    const deletePage = pages.find((p) =>
-      p.properties['タイトル']?.title?.[0]?.text?.content === CRUD_TEST_RECORDS.delete.title
+    const deletePage = pages.find(
+      (p) => p.properties['タイトル']?.title?.[0]?.text?.content === CRUD_TEST_RECORDS.delete.title
     );
-    
+
     if (updatePage) updatePageId = updatePage.id;
     if (deletePage) deletePageId = deletePage.id;
   }, E2E_CONFIG.timeout);
@@ -55,7 +55,7 @@ describe('CRUD Operations E2E Tests', () => {
   describe('Create Operations', () => {
     it('should create a page with all properties including relation', async () => {
       const createData = CRUD_TEST_RECORDS.create;
-      
+
       const created = await typedClient.createPage('E2ETestDatabase', {
         title: createData.title,
         description: createData.description,
@@ -68,16 +68,17 @@ describe('CRUD Operations E2E Tests', () => {
 
       expect(created).toBeDefined();
       expect(created.id).toBeDefined();
-      
+
       createdPageId = created.id;
-      
+
       // Verify created page
       await rateLimitDelay();
       const retrieved = await client.pages.retrieve({ page_id: createdPageId });
-      
+
       expect(retrieved).toBeDefined();
-      expect((retrieved as any).properties['タイトル']?.title?.[0]?.text?.content)
-        .toBe(createData.title);
+      expect((retrieved as any).properties['タイトル']?.title?.[0]?.text?.content).toBe(
+        createData.title
+      );
     });
 
     it('should create a page with minimal properties', async () => {
@@ -88,7 +89,7 @@ describe('CRUD Operations E2E Tests', () => {
 
       expect(minimal).toBeDefined();
       expect(minimal.id).toBeDefined();
-      
+
       // Clean up - archive the created page
       await rateLimitDelay();
       await client.pages.update({
@@ -124,7 +125,7 @@ describe('CRUD Operations E2E Tests', () => {
   describe('Read Operations', () => {
     it('should retrieve a page by ID', async () => {
       const page = await client.pages.retrieve({ page_id: createdPageId });
-      
+
       expect(page).toBeDefined();
       expect(page.id).toBe(createdPageId);
       const props = (page as any).properties;
@@ -136,13 +137,13 @@ describe('CRUD Operations E2E Tests', () => {
       const database = await client.databases.retrieve({
         database_id: databaseId,
       });
-      
+
       expect(database).toBeDefined();
       expect(database.id).toBe(databaseId);
       if ('title' in database) {
         expect(database.title[0].plain_text).toBe('E2E Test Database');
       }
-      
+
       // Verify properties exist
       const properties = Object.keys(database.properties);
       expect(properties).toContain('タイトル');
@@ -157,7 +158,7 @@ describe('CRUD Operations E2E Tests', () => {
       const result = await typedClient.queryDatabase('E2ETestDatabase', {
         page_size: 5,
       });
-      
+
       expect(result).toBeDefined();
       expect(result.results).toBeDefined();
       expect(Array.isArray(result.results)).toBe(true);
@@ -175,10 +176,10 @@ describe('CRUD Operations E2E Tests', () => {
       const updated = await typedClient.updatePage(updatePageId, 'E2ETestDatabase', {
         priority: '高', // Change from 中 to 高
       });
-      
+
       expect(updated).toBeDefined();
       expect(updated.id).toBe(updatePageId);
-      
+
       // Verify the update
       await rateLimitDelay();
       const retrieved = await client.pages.retrieve({ page_id: updatePageId });
@@ -196,14 +197,14 @@ describe('CRUD Operations E2E Tests', () => {
         progress: 75,
         completed: true,
       });
-      
+
       expect(updated).toBeDefined();
-      
+
       // Verify the updates
       await rateLimitDelay();
       const retrieved = await client.pages.retrieve({ page_id: updatePageId });
       const props = (retrieved as any).properties;
-      
+
       expect(props['説明']?.rich_text?.[0]?.text?.content).toBe('Updated description');
       expect(props['進捗率']?.number).toBe(75); // Notion stores as percentage
       expect(props['完了']?.checkbox).toBe(true);
@@ -219,14 +220,14 @@ describe('CRUD Operations E2E Tests', () => {
       const updated = await typedClient.updatePage(updatePageId, 'E2ETestDatabase', {
         title: 'Updated Title',
       });
-      
+
       expect(updated).toBeDefined();
-      
+
       // Verify only title changed
       await rateLimitDelay();
       const retrieved = await client.pages.retrieve({ page_id: updatePageId });
       const props = (retrieved as any).properties;
-      
+
       expect(props['タイトル']?.title?.[0]?.text?.content).toBe('Updated Title');
       // These should remain from previous update
       expect(props['優先度']?.select?.name).toBe('高');
@@ -246,9 +247,9 @@ describe('CRUD Operations E2E Tests', () => {
         page_id: deletePageId,
         archived: true,
       });
-      
+
       await rateLimitDelay();
-      
+
       // Verify page is archived
       const retrieved = await client.pages.retrieve({ page_id: deletePageId });
       expect((retrieved as any).archived).toBe(true);
@@ -259,7 +260,7 @@ describe('CRUD Operations E2E Tests', () => {
       const result = await typedClient.queryDatabase('E2ETestDatabase', {
         page_size: 100,
       });
-      
+
       const archivedPage = result.results.find((p: any) => p.id === deletePageId);
       expect(archivedPage).toBeUndefined();
     });
@@ -270,9 +271,9 @@ describe('CRUD Operations E2E Tests', () => {
           page_id: createdPageId,
           archived: true,
         });
-        
+
         await rateLimitDelay();
-        
+
         // Verify cleanup
         const retrieved = await client.pages.retrieve({ page_id: createdPageId });
         expect((retrieved as any).archived).toBe(true);
@@ -282,9 +283,7 @@ describe('CRUD Operations E2E Tests', () => {
 
   describe('Error Handling', () => {
     it('should handle invalid page ID gracefully', async () => {
-      await expect(
-        client.pages.retrieve({ page_id: 'invalid-id-123' })
-      ).rejects.toThrow();
+      await expect(client.pages.retrieve({ page_id: 'invalid-id-123' })).rejects.toThrow();
     });
 
     it('should handle invalid database name', async () => {

@@ -32,13 +32,13 @@ if (!NOTION_API_KEY || !NOTION_PARENT_PAGE_ID) {
 
 async function prepareE2ETypes() {
   console.log('🚀 Preparing E2E types...');
-  
+
   // 1. Initialize database setup
   const dbSetup = new DatabaseSetup(NOTION_API_KEY!);
-  
+
   // 2. Create or find test databases
   console.log('📊 Setting up test databases...');
-  
+
   // First, find or create category database
   let categoryDatabaseId = await dbSetup.findTestDatabase('E2E Categories');
   if (!categoryDatabaseId) {
@@ -47,7 +47,7 @@ async function prepareE2ETypes() {
   } else {
     console.log('Using existing category database:', categoryDatabaseId);
   }
-  
+
   // Then, find or create test database
   let testDatabaseId = await dbSetup.findTestDatabase('E2E Test Database');
   if (!testDatabaseId) {
@@ -56,20 +56,20 @@ async function prepareE2ETypes() {
   } else {
     console.log('Using existing test database:', testDatabaseId);
   }
-  
+
   // 3. Use shared type generator to create config and build types
   try {
     await E2ETypeGenerator.generateAll(
       testDatabaseId,
       categoryDatabaseId,
-      NOTION_API_KEY!,  // Already validated above
+      NOTION_API_KEY!, // Already validated above
       false // Not verbose
     );
   } catch (error) {
     console.error('❌ Failed to generate types:', error);
     process.exit(1);
   }
-  
+
   console.log('✨ E2E type preparation complete!');
   console.log('   Test Database ID:', testDatabaseId);
   console.log('   Category Database ID:', categoryDatabaseId);

@@ -14,7 +14,7 @@ import type { NotionTypedConfig } from '../../src/types';
  * Create test configuration file
  */
 export function createTestConfig(
-  testDatabaseId: string, 
+  testDatabaseId: string,
   categoryDatabaseId: string
 ): NotionTypedConfig {
   const config: NotionTypedConfig = {
@@ -59,7 +59,7 @@ export default config;
  */
 export function cleanupGeneratedFiles(): void {
   const generatedPath = path.resolve(process.cwd(), 'e2e', 'generated');
-  
+
   if (fs.existsSync(generatedPath)) {
     fs.rmSync(generatedPath, { recursive: true, force: true });
   }
@@ -69,7 +69,7 @@ export function cleanupGeneratedFiles(): void {
     path.resolve(process.cwd(), 'e2e', 'test.notion-typed.config.ts'),
     path.resolve(process.cwd(), 'e2e', 'test-direct.config.ts'),
   ];
-  
+
   for (const configPath of configPaths) {
     if (fs.existsSync(configPath)) {
       fs.unlinkSync(configPath);
@@ -99,7 +99,7 @@ export async function setupTestDatabases(): Promise<{
   categoryDatabaseId: string;
 }> {
   const setup = new DatabaseSetup(E2E_CONFIG.apiKey, E2E_CONFIG.rateLimitDelay);
-  
+
   // Always use parent page ID from configuration
   return await setup.setup(E2E_CONFIG.parentPageId);
 }
@@ -137,7 +137,7 @@ export function verifyGeneratedFiles(): boolean {
  */
 export async function importGeneratedClient(): Promise<any> {
   const clientPath = path.resolve(process.cwd(), 'e2e', 'generated', 'client.ts');
-  
+
   if (!fs.existsSync(clientPath)) {
     throw new Error('Generated client not found. Run type generation first.');
   }
@@ -153,7 +153,13 @@ export async function importGeneratedClient(): Promise<any> {
 export function compareObjects(
   actual: any,
   expected: any,
-  ignoreFields: string[] = ['id', 'created_time', 'last_edited_time', 'created_by', 'last_edited_by']
+  ignoreFields: string[] = [
+    'id',
+    'created_time',
+    'last_edited_time',
+    'created_by',
+    'last_edited_by',
+  ]
 ): boolean {
   const cleanObject = (obj: any): any => {
     const cleaned = { ...obj };

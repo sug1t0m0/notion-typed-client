@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { Client } from '@notionhq/client';
+import type { Client } from '@notionhq/client';
 import { rateLimitDelay } from '../utils/testHelpers';
 import { TestLifecycle } from '../setup/testLifecycle';
 import type { NotionTypedClient } from '../generated/E2ETestClient';
@@ -33,16 +33,14 @@ describe('Relation Property E2E Tests', () => {
     });
     categoryIds = categoryResponse.results
       .filter((p): p is any => p.object === 'page')
-      .map(p => p.id);
+      .map((p) => p.id);
 
     // Get some task IDs
     const taskResponse = await client.databases.query({
       database_id: testDatabaseId,
       page_size: 5,
     });
-    taskIds = taskResponse.results
-      .filter((p): p is any => p.object === 'page')
-      .map(p => p.id);
+    taskIds = taskResponse.results.filter((p): p is any => p.object === 'page').map((p) => p.id);
   });
 
   afterAll(async () => {
