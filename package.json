@@ -1,6 +1,6 @@
 {
   "name": "@sug1t0m0/notion-typed-client",
-  "version": "3.1.0",
+  "version": "4.0.0",
   "description": "Type-safe wrapper for Notion SDK with database schema injection",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
