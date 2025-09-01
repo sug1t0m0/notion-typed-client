@@ -1,10 +1,10 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from '@notionhq/client';
-import { rateLimitDelay } from '../utils/testHelpers';
-import { TestLifecycle } from '../setup/testLifecycle';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CRUD_TEST_RECORDS } from '../fixtures/testData';
-import { E2E_CONFIG } from '../setup/testEnvironment';
 import type { NotionTypedClient } from '../generated/E2ETestClient';
+import { E2E_CONFIG } from '../setup/testEnvironment';
+import { TestLifecycle } from '../setup/testLifecycle';
+import { rateLimitDelay } from '../utils/testHelpers';
 
 describe('CRUD Operations E2E Tests', () => {
   let databaseId: string;
@@ -33,14 +33,15 @@ describe('CRUD Operations E2E Tests', () => {
       page_size: 100,
     });
 
+    // biome-ignore lint/suspicious/noExplicitAny: Notion API response types require type assertion
     const pages = response.results.filter((p): p is any => p.object === 'page');
 
     // Find update and delete test records
     const updatePage = pages.find(
-      (p) => p.properties['タイトル']?.title?.[0]?.text?.content === CRUD_TEST_RECORDS.update.title
+      (p) => p.properties.タイトル?.title?.[0]?.text?.content === CRUD_TEST_RECORDS.update.title
     );
     const deletePage = pages.find(
-      (p) => p.properties['タイトル']?.title?.[0]?.text?.content === CRUD_TEST_RECORDS.delete.title
+      (p) => p.properties.タイトル?.title?.[0]?.text?.content === CRUD_TEST_RECORDS.delete.title
     );
 
     if (updatePage) updatePageId = updatePage.id;
@@ -76,7 +77,8 @@ describe('CRUD Operations E2E Tests', () => {
       const retrieved = await client.pages.retrieve({ page_id: createdPageId });
 
       expect(retrieved).toBeDefined();
-      expect((retrieved as any).properties['タイトル']?.title?.[0]?.text?.content).toBe(
+      // biome-ignore lint/suspicious/noExplicitAny: Notion API response requires type assertion
+      expect((retrieved as any).properties.タイトル?.title?.[0]?.text?.content).toBe(
         createData.title
       );
     });
@@ -128,9 +130,10 @@ describe('CRUD Operations E2E Tests', () => {
 
       expect(page).toBeDefined();
       expect(page.id).toBe(createdPageId);
+      // biome-ignore lint/suspicious/noExplicitAny: Notion API response requires type assertion
       const props = (page as any).properties;
-      expect(props['タイトル']?.title?.[0]?.text?.content).toBe(CRUD_TEST_RECORDS.create.title);
-      expect(props['優先度']?.select?.name).toBe(CRUD_TEST_RECORDS.create.priority);
+      expect(props.タイトル?.title?.[0]?.text?.content).toBe(CRUD_TEST_RECORDS.create.title);
+      expect(props.優先度?.select?.name).toBe(CRUD_TEST_RECORDS.create.priority);
     });
 
     it('should retrieve database schema', async () => {
@@ -183,7 +186,8 @@ describe('CRUD Operations E2E Tests', () => {
       // Verify the update
       await rateLimitDelay();
       const retrieved = await client.pages.retrieve({ page_id: updatePageId });
-      expect((retrieved as any).properties['優先度']?.select?.name).toBe('高');
+      // biome-ignore lint/suspicious/noExplicitAny: Notion API response requires type assertion
+      expect((retrieved as any).properties.優先度?.select?.name).toBe('高');
     });
 
     it('should update multiple properties', async () => {
@@ -203,11 +207,12 @@ describe('CRUD Operations E2E Tests', () => {
       // Verify the updates
       await rateLimitDelay();
       const retrieved = await client.pages.retrieve({ page_id: updatePageId });
+      // biome-ignore lint/suspicious/noExplicitAny: Notion API response requires type assertion
       const props = (retrieved as any).properties;
 
-      expect(props['説明']?.rich_text?.[0]?.text?.content).toBe('Updated description');
-      expect(props['進捗率']?.number).toBe(75); // Notion stores as percentage
-      expect(props['完了']?.checkbox).toBe(true);
+      expect(props.説明?.rich_text?.[0]?.text?.content).toBe('Updated description');
+      expect(props.進捗率?.number).toBe(75); // Notion stores as percentage
+      expect(props.完了?.checkbox).toBe(true);
     });
 
     it('should handle partial updates correctly', async () => {
@@ -226,12 +231,13 @@ describe('CRUD Operations E2E Tests', () => {
       // Verify only title changed
       await rateLimitDelay();
       const retrieved = await client.pages.retrieve({ page_id: updatePageId });
+      // biome-ignore lint/suspicious/noExplicitAny: Notion API response requires type assertion
       const props = (retrieved as any).properties;
 
-      expect(props['タイトル']?.title?.[0]?.text?.content).toBe('Updated Title');
+      expect(props.タイトル?.title?.[0]?.text?.content).toBe('Updated Title');
       // These should remain from previous update
-      expect(props['優先度']?.select?.name).toBe('高');
-      expect(props['完了']?.checkbox).toBe(true);
+      expect(props.優先度?.select?.name).toBe('高');
+      expect(props.完了?.checkbox).toBe(true);
     });
   });
 

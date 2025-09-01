@@ -1,8 +1,8 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Client } from '@notionhq/client';
-import { rateLimitDelay } from '../utils/testHelpers';
-import { TestLifecycle } from '../setup/testLifecycle';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { NotionTypedClient } from '../generated/E2ETestClient';
+import { TestLifecycle } from '../setup/testLifecycle';
+import { rateLimitDelay } from '../utils/testHelpers';
 
 describe('Relation Property E2E Tests', () => {
   let testDatabaseId: string;
@@ -99,8 +99,11 @@ describe('Relation Property E2E Tests', () => {
       const retrieved = await client.pages.retrieve({ page_id: createdTaskId });
       const props = (retrieved as any).properties;
 
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       expect(props['カテゴリー']?.relation).toBeDefined();
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       expect(props['カテゴリー'].relation).toHaveLength(1);
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       expect(props['カテゴリー'].relation[0].id).toBe(categoryIds[0]);
     });
 
@@ -147,7 +150,9 @@ describe('Relation Property E2E Tests', () => {
       const retrieved = await client.pages.retrieve({ page_id: createdTaskId });
       const props = (retrieved as any).properties;
 
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       expect(props['カテゴリー'].relation).toHaveLength(1);
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       expect(props['カテゴリー'].relation[0].id).toBe(categoryIds[1]);
     });
 
@@ -169,6 +174,7 @@ describe('Relation Property E2E Tests', () => {
       const retrieved = await client.pages.retrieve({ page_id: createdTaskId });
       const props = (retrieved as any).properties;
 
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       expect(props['カテゴリー'].relation).toHaveLength(0);
     });
 
@@ -191,6 +197,7 @@ describe('Relation Property E2E Tests', () => {
       const retrieved = await client.pages.retrieve({ page_id: created.id });
       const props = (retrieved as any).properties;
 
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       expect(props['カテゴリー'].relation).toHaveLength(3);
 
       // Clean up

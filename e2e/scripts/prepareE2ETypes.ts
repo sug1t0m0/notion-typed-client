@@ -34,6 +34,7 @@ async function prepareE2ETypes() {
   console.log('🚀 Preparing E2E types...');
 
   // 1. Initialize database setup
+  // biome-ignore lint/style/noNonNullAssertion: Variable validated above
   const dbSetup = new DatabaseSetup(NOTION_API_KEY!);
 
   // 2. Create or find test databases
@@ -43,6 +44,7 @@ async function prepareE2ETypes() {
   let categoryDatabaseId = await dbSetup.findTestDatabase('E2E Categories');
   if (!categoryDatabaseId) {
     console.log('Creating new category database...');
+    // biome-ignore lint/style/noNonNullAssertion: Variable validated above
     categoryDatabaseId = await dbSetup.createCategoryDatabase(NOTION_PARENT_PAGE_ID!);
   } else {
     console.log('Using existing category database:', categoryDatabaseId);
@@ -52,6 +54,7 @@ async function prepareE2ETypes() {
   let testDatabaseId = await dbSetup.findTestDatabase('E2E Test Database');
   if (!testDatabaseId) {
     console.log('Creating new test database...');
+    // biome-ignore lint/style/noNonNullAssertion: Variable validated above
     testDatabaseId = await dbSetup.createTestDatabase(NOTION_PARENT_PAGE_ID!, categoryDatabaseId);
   } else {
     console.log('Using existing test database:', testDatabaseId);
@@ -62,7 +65,8 @@ async function prepareE2ETypes() {
     await E2ETypeGenerator.generateAll(
       testDatabaseId,
       categoryDatabaseId,
-      NOTION_API_KEY!, // Already validated above
+      // biome-ignore lint/style/noNonNullAssertion: Variable validated above
+      NOTION_API_KEY!,
       false // Not verbose
     );
   } catch (error) {

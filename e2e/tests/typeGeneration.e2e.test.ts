@@ -1,10 +1,10 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { execSync } from 'node:child_process';
-import { verifyGeneratedFiles } from '../utils/testHelpers';
-import { TestLifecycle } from '../setup/testLifecycle';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { PRIORITY_OPTIONS } from '../fixtures/testSchemas';
+import { TestLifecycle } from '../setup/testLifecycle';
+import { verifyGeneratedFiles } from '../utils/testHelpers';
 
 describe('Type Generation E2E Tests', () => {
   let testDatabaseId: string;
@@ -213,6 +213,7 @@ describe('Type Generation E2E Tests', () => {
 
         // If we get here, compilation succeeded
         expect(true).toBe(true);
+        // biome-ignore lint/suspicious/noExplicitAny: Error type needs any for stdout property
       } catch (error: any) {
         // Compilation failed - show the error
         console.error('TypeScript compilation failed:', error.stdout || error.message);

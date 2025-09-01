@@ -1,12 +1,12 @@
 import { Client } from '@notionhq/client';
-import {
-  TEST_DATABASE_PROPERTIES_BASE,
-  CATEGORY_DATABASE_PROPERTIES,
-  E2E_TEST_SCHEMA,
-  E2E_CATEGORY_SCHEMA,
-} from '../fixtures/testSchemas';
-import { getAllTestRecords, type TestRecord } from '../fixtures/testData';
 import { Logger } from '../../src/utils/Logger';
+import { getAllTestRecords, type TestRecord } from '../fixtures/testData';
+import {
+  CATEGORY_DATABASE_PROPERTIES,
+  E2E_CATEGORY_SCHEMA,
+  E2E_TEST_SCHEMA,
+  TEST_DATABASE_PROPERTIES_BASE,
+} from '../fixtures/testSchemas';
 
 const logger = new Logger('E2E:DatabaseSetup');
 
@@ -113,6 +113,7 @@ export class DatabaseSetup {
             relation: {
               database_id: categoryDatabaseId,
               type: 'dual_property' as const,
+              // biome-ignore lint/suspicious/noExplicitAny: Notion API requires dynamic typing for dual_property
               dual_property: {} as any,
             },
           },
@@ -217,6 +218,7 @@ export class DatabaseSetup {
     record: TestRecord,
     categoryId?: string
   ): Promise<void> {
+    // biome-ignore lint/suspicious/noExplicitAny: Notion API property values require dynamic typing
     const properties: any = {
       タイトル: {
         title: [
@@ -233,6 +235,7 @@ export class DatabaseSetup {
     };
 
     if (record.description) {
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       properties['説明'] = {
         rich_text: [
           {
@@ -245,6 +248,7 @@ export class DatabaseSetup {
     }
 
     if (record.priority) {
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       properties['優先度'] = {
         select: {
           name: record.priority,
@@ -253,24 +257,28 @@ export class DatabaseSetup {
     }
 
     if (record.tags && record.tags.length > 0) {
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       properties['タグ'] = {
         multi_select: record.tags.map((tag) => ({ name: tag })),
       };
     }
 
     if (record.assignee && record.assignee.length > 0) {
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       properties['担当者'] = {
         people: record.assignee.map((userId) => ({ id: userId })),
       };
     }
 
     if (record.progress !== undefined) {
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       properties['進捗率'] = {
         number: record.progress / 100, // Convert percentage to decimal
       };
     }
 
     if (record.dueDate) {
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       properties['期限'] = {
         date: {
           start: record.dueDate,
@@ -279,6 +287,7 @@ export class DatabaseSetup {
     }
 
     if (categoryId) {
+      // biome-ignore lint/complexity/useLiteralKeys: Japanese property names from Notion API
       properties['カテゴリー'] = {
         relation: [
           {

@@ -1,10 +1,10 @@
-import { Client } from '@notionhq/client';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { E2E_CONFIG } from '../setup/testEnvironment';
-import { DatabaseSetup } from '../setup/databaseSetup';
-import { E2E_TEST_SCHEMA, E2E_CATEGORY_SCHEMA } from '../fixtures/testSchemas';
+import { Client } from '@notionhq/client';
 import type { NotionTypedConfig } from '../../src/types';
+import { E2E_CATEGORY_SCHEMA, E2E_TEST_SCHEMA } from '../fixtures/testSchemas';
+import { DatabaseSetup } from '../setup/databaseSetup';
+import { E2E_CONFIG } from '../setup/testEnvironment';
 
 /**
  * Helper functions for E2E tests
@@ -135,6 +135,7 @@ export function verifyGeneratedFiles(): boolean {
 /**
  * Import generated client dynamically
  */
+// biome-ignore lint/suspicious/noExplicitAny: Dynamically loaded generated client type
 export async function importGeneratedClient(): Promise<any> {
   const clientPath = path.resolve(process.cwd(), 'e2e', 'generated', 'client.ts');
 
@@ -151,7 +152,9 @@ export async function importGeneratedClient(): Promise<any> {
  * Compare two objects for equality (ignoring specific fields)
  */
 export function compareObjects(
+  // biome-ignore lint/suspicious/noExplicitAny: Generic comparison function for any object types
   actual: any,
+  // biome-ignore lint/suspicious/noExplicitAny: Generic comparison function for any object types
   expected: any,
   ignoreFields: string[] = [
     'id',
@@ -161,6 +164,7 @@ export function compareObjects(
     'last_edited_by',
   ]
 ): boolean {
+  // biome-ignore lint/suspicious/noExplicitAny: Generic object cleaning function
   const cleanObject = (obj: any): any => {
     const cleaned = { ...obj };
     for (const field of ignoreFields) {

@@ -4,9 +4,9 @@
  */
 
 import { Client } from '@notionhq/client';
-import { E2E_CONFIG } from './testEnvironment';
-import { DatabaseSetup } from './databaseSetup';
 import { E2ETypeGenerator } from '../utils/typeGenerator';
+import { DatabaseSetup } from './databaseSetup';
+import { E2E_CONFIG } from './testEnvironment';
 
 export class TestLifecycle {
   private static instance: TestLifecycle | null = null;
@@ -14,6 +14,7 @@ export class TestLifecycle {
   private static configPath: string | null = null;
   private static testDatabaseId: string | null = null;
   private static categoryDatabaseId: string | null = null;
+  // biome-ignore lint/suspicious/noExplicitAny: Generated client type loaded dynamically
   private static generatedClient: any = null;
   private static notionClient: Client | null = null;
 
@@ -35,16 +36,22 @@ export class TestLifecycle {
     categoryDatabaseId: string;
     configPath: string;
     client: Client;
+    // biome-ignore lint/suspicious/noExplicitAny: Generated client type loaded dynamically
     GeneratedClient: any;
   }> {
     // Return cached setup if already complete
     if (TestLifecycle.setupComplete) {
       console.log('✅ Using cached E2E test setup');
       return {
+        // biome-ignore lint/style/noNonNullAssertion: Values guaranteed when setupComplete is true
         testDatabaseId: TestLifecycle.testDatabaseId!,
+        // biome-ignore lint/style/noNonNullAssertion: Values guaranteed when setupComplete is true
         categoryDatabaseId: TestLifecycle.categoryDatabaseId!,
+        // biome-ignore lint/style/noNonNullAssertion: Values guaranteed when setupComplete is true
         configPath: TestLifecycle.configPath!,
+        // biome-ignore lint/style/noNonNullAssertion: Values guaranteed when setupComplete is true
         client: TestLifecycle.notionClient!,
+        // biome-ignore lint/style/noNonNullAssertion: Values guaranteed when setupComplete is true
         GeneratedClient: TestLifecycle.generatedClient!,
       };
     }
@@ -130,10 +137,15 @@ export class TestLifecycle {
     }
 
     return {
+      // biome-ignore lint/style/noNonNullAssertion: Values checked by setupComplete condition
       testDatabaseId: TestLifecycle.testDatabaseId!,
+      // biome-ignore lint/style/noNonNullAssertion: Values checked by setupComplete condition
       categoryDatabaseId: TestLifecycle.categoryDatabaseId!,
+      // biome-ignore lint/style/noNonNullAssertion: Values checked by setupComplete condition
       configPath: TestLifecycle.configPath!,
+      // biome-ignore lint/style/noNonNullAssertion: Values checked by setupComplete condition
       client: TestLifecycle.notionClient!,
+      // biome-ignore lint/style/noNonNullAssertion: Values checked by setupComplete condition
       GeneratedClient: TestLifecycle.generatedClient!,
     };
   }

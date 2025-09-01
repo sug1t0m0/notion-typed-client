@@ -40,6 +40,7 @@ export class ConfigUpdater {
 
   private createTransformer(
     databaseName: string,
+    // biome-ignore lint/suspicious/noExplicitAny: Database update structure contains dynamic property types
     updates: any
   ): ts.TransformerFactory<ts.SourceFile> {
     return (context: ts.TransformationContext) => {
@@ -68,6 +69,7 @@ export class ConfigUpdater {
 
   private updateDatabaseObject(
     dbObject: ts.ObjectLiteralExpression,
+    // biome-ignore lint/suspicious/noExplicitAny: Database update structure contains dynamic property types
     updates: any
   ): ts.ObjectLiteralExpression {
     const properties = dbObject.properties.map((prop) => {

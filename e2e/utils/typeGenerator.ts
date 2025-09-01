@@ -3,12 +3,13 @@
  * Used by both test lifecycle and standalone type preparation
  */
 
+import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { execSync } from 'node:child_process';
 import type { NotionTypedConfig } from '../../src/types';
-import { E2E_TEST_SCHEMA, E2E_CATEGORY_SCHEMA } from '../fixtures/testSchemas';
+import { E2E_CATEGORY_SCHEMA, E2E_TEST_SCHEMA } from '../fixtures/testSchemas';
 
+// biome-ignore lint/complexity/noStaticOnlyClass: Utility functions grouped for organization
 export class E2ETypeGenerator {
   /**
    * Create complete configuration with database IDs

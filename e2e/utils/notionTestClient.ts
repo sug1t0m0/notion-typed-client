@@ -23,6 +23,7 @@ export class NotionTestClient extends Client {
   /**
    * Query database with automatic rate limiting
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Notion API response types are complex and vary
   async queryDatabaseWithDelay(params: QueryDatabaseParameters): Promise<any> {
     const result = await this.databases.query(params);
     await this.sleep(this.rateLimitDelay);
@@ -32,6 +33,7 @@ export class NotionTestClient extends Client {
   /**
    * Create page with automatic rate limiting
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Notion API parameters and response types are complex
   async createPageWithDelay(params: any): Promise<any> {
     const result = await this.pages.create(params);
     await this.sleep(this.rateLimitDelay);
@@ -41,6 +43,7 @@ export class NotionTestClient extends Client {
   /**
    * Update page with automatic rate limiting
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Notion API parameters and response types are complex
   async updatePageWithDelay(params: any): Promise<any> {
     const result = await this.pages.update(params);
     await this.sleep(this.rateLimitDelay);
@@ -50,6 +53,7 @@ export class NotionTestClient extends Client {
   /**
    * Retrieve page with automatic rate limiting
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Notion API response types are complex
   async retrievePageWithDelay(pageId: string): Promise<any> {
     const result = await this.pages.retrieve({ page_id: pageId });
     await this.sleep(this.rateLimitDelay);
@@ -59,6 +63,7 @@ export class NotionTestClient extends Client {
   /**
    * Retrieve database with automatic rate limiting
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Notion API response types are complex
   async retrieveDatabaseWithDelay(databaseId: string): Promise<any> {
     const result = await this.databases.retrieve({ database_id: databaseId });
     await this.sleep(this.rateLimitDelay);
@@ -68,6 +73,7 @@ export class NotionTestClient extends Client {
   /**
    * Count pages in database
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Notion API filter types are complex
   async countPages(databaseId: string, filter?: any): Promise<number> {
     let count = 0;
     let hasMore = true;
@@ -92,7 +98,9 @@ export class NotionTestClient extends Client {
   /**
    * Get all pages from database
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Notion API filter and response types are complex
   async getAllPages(databaseId: string, filter?: any): Promise<any[]> {
+    // biome-ignore lint/suspicious/noExplicitAny: Notion API page types are complex
     const pages: any[] = [];
     let hasMore = true;
     let cursor: string | undefined;

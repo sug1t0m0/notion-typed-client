@@ -1,4 +1,4 @@
-import type { DatabaseConfig, PropertyConfig } from '../../src/types';
+import type { DatabaseConfig } from '../../src/types';
 
 /**
  * E2E test database schema configuration
@@ -133,6 +133,7 @@ export const COLOR_OPTIONS = ['赤', '青', '緑', '黄'];
 /**
  * Property configuration for creating category database
  */
+// biome-ignore lint/suspicious/noExplicitAny: Notion API property definitions require dynamic typing
 export const CATEGORY_DATABASE_PROPERTIES: any = {
   名前: {
     title: {},
@@ -153,6 +154,7 @@ export const CATEGORY_DATABASE_PROPERTIES: any = {
  * Property configuration for creating test database
  * Note: Relation property will be added after category database is created
  */
+// biome-ignore lint/suspicious/noExplicitAny: Notion API property definitions require dynamic typing
 export const TEST_DATABASE_PROPERTIES_BASE: any = {
   タイトル: {
     title: {},
