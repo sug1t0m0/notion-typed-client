@@ -12,12 +12,16 @@ import { DatabaseSetup } from '../setup/databaseSetup';
 import { E2ETypeGenerator } from '../utils/typeGenerator';
 
 // Load E2E environment variables
+// In CI environments, variables are set directly. In local development, load from .env.e2e
 const envPath = path.resolve(process.cwd(), 'e2e', '.env.e2e');
 if (fs.existsSync(envPath)) {
   dotenv.config({ path: envPath });
 } else {
-  console.error('❌ E2E environment file not found. Please create e2e/.env.e2e');
-  process.exit(1);
+  // In CI, environment variables should be already set
+  // Only warn if running locally (not in CI)
+  if (!process.env.CI) {
+    console.warn('⚠️  E2E environment file not found. Using environment variables directly.');
+  }
 }
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY_E2E || process.env.NOTION_API_KEY;
@@ -27,6 +31,13 @@ if (!NOTION_API_KEY || !NOTION_PARENT_PAGE_ID) {
   console.error('❌ Required environment variables not set:');
   if (!NOTION_API_KEY) console.error('   - NOTION_API_KEY_E2E or NOTION_API_KEY');
   if (!NOTION_PARENT_PAGE_ID) console.error('   - NOTION_PARENT_PAGE_ID');
+  console.error('');
+  console.error('For local development:');
+  console.error('  1. Copy e2e/.env.e2e.example to e2e/.env.e2e');
+  console.error('  2. Add your Notion API credentials');
+  console.error('');
+  console.error('For CI environments:');
+  console.error('  Ensure NOTION_API_KEY_E2E and NOTION_PARENT_PAGE_ID are set');
   process.exit(1);
 }
 
