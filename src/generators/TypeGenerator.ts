@@ -344,7 +344,25 @@ export type UniqueIdFilter =
   | { greater_than: number }
   | { less_than: number }
   | { greater_than_or_equal_to: number }
-  | { less_than_or_equal_to: number };`;
+  | { less_than_or_equal_to: number };
+
+// Special timestamp filters (no property field required)
+export type TimestampCreatedTimeFilter = {
+  timestamp: 'created_time';
+  created_time: TimestampFilter;
+};
+
+export type TimestampLastEditedTimeFilter = {
+  timestamp: 'last_edited_time';
+  last_edited_time: TimestampFilter;
+};
+
+// Compound filter type that can contain nested filters
+export type CompoundFilter<T> = {
+  and?: (T | CompoundFilter<T>)[];
+} | {
+  or?: (T | CompoundFilter<T>)[];
+};`;
   }
 
   private generatePropertyFilterTypes(database: ResolvedDatabaseConfig): string | null {
@@ -468,28 +486,10 @@ export type UniqueIdFilter =
     // Create base filter type without compound filter to avoid circular reference
     const baseFilterTypeName = `${filterTypeName}Base`;
 
-    return `// Special timestamp filters (no property field required)
-export type TimestampCreatedTimeFilter = {
-  timestamp: 'created_time';
-  created_time: TimestampFilter;
-};
-
-export type TimestampLastEditedTimeFilter = {
-  timestamp: 'last_edited_time';
-  last_edited_time: TimestampFilter;
-};
-
-// Base filter type without compound filters
+    return `// Base filter type without compound filters
 export type ${baseFilterTypeName} = 
   | ${propertyFilterTypes.join('\n  | ')}
   | ${specialFilters.join('\n  | ')};
-
-// Compound filter type that can contain nested filters
-export type CompoundFilter<T> = {
-  and?: (T | CompoundFilter<T>)[];
-} | {
-  or?: (T | CompoundFilter<T>)[];
-};
 
 // Main filter type with compound filter support
 export type ${filterTypeName} = 

@@ -138,6 +138,9 @@ jobs:
         run: pnpm install --frozen-lockfile
       
       - name: Run CI checks
+        env:
+          NOTION_API_KEY_E2E: ${{ secrets.NOTION_API_KEY_E2E }}
+          NOTION_PARENT_PAGE_ID: ${{ secrets.NOTION_PARENT_PAGE_ID }}
         run: pnpm run ci
       
       - name: Get current version

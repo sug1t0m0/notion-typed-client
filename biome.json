@@ -37,16 +37,12 @@
     }
   },
   "files": {
-    "includes": ["src/**/*"],
-    "experimentalScannerIgnores": [
-      "dist/**",
-      "node_modules/**",
-      "coverage/**",
-      "notion-typed-codegen/**",
-      "example/notion-typed-codegen/**",
-      "example/generated/**",
-      "*.config.js",
-      "*.config.ts"
+    "includes": [
+      "src/**/*",
+      "e2e/**/*",
+      "!e2e/generated",
+      "!e2e/.env.e2e",
+      "!e2e/e2e.notion-typed.config.ts"
     ]
   }
 }

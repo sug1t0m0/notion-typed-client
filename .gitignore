@@ -11,6 +11,7 @@ coverage/
 **/.env.local
 **/.env.*.local
 .npmrc
+.env.e2e
 
 # Editor directories and files
 .vscode/
@@ -35,6 +36,13 @@ pnpm-debug.log*
 notion-typed-codegen/
 example/notion-typed-codegen/
 example/generated/
+
+# E2E test generated files
+e2e/generated/
+e2e/*.notion-typed.config.ts
+e2e/test.config.ts
+e2e/test-direct.config.ts
+e2e/reports/
 
 # Temporary files
 *.tmp

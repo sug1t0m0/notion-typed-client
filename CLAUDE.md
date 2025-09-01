@@ -61,9 +61,10 @@ When working on this repository, prioritize:
      - Re-run quality checks (max 3 attempts)
      - Report and stop if still failing after 3 attempts
    - **Code Generation Validation** (if working on code generation features):
-     - Clean up any existing generated directories: `rm -rf notion-typed-codegen`
-     - Run code generation command: `node dist/cli.js generate`
-     - Type check all TypeScript files in generated directory: `npx tsc notion-typed-codegen/*.ts --noEmit --skipLibCheck`
+     - Run E2E type generation and validation: `pnpm run typecheck:e2e`
+     - This command automatically:
+       - Generates types from actual Notion databases
+       - Type checks all generated TypeScript files
      - If type errors occur, fix the generator code and repeat validation
 
 2. **Change Verification**
