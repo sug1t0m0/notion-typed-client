@@ -2,13 +2,14 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Client } from '@notionhq/client';
 import { TestLifecycle } from '../setup/testLifecycle';
 import { EXPECTED_FILTER_RESULTS } from '../fixtures/testData';
+import type { NotionTypedClient } from '../generated/E2ETestClient';
 
 describe('Filter and Pagination E2E Tests', () => {
   let testDatabaseId: string;
   let categoryDatabaseId: string;
   let client: Client;
-  let GeneratedClient: any;
-  let typedClient: any;
+  let GeneratedClient: typeof NotionTypedClient;
+  let typedClient: NotionTypedClient;
 
   beforeAll(async () => {
     // Get resources from centralized lifecycle
@@ -265,7 +266,7 @@ describe('Filter and Pagination E2E Tests', () => {
         // Fetch next page using cursor
         const secondPage = await typedClient.queryDatabase('E2ETestDatabase', {
           page_size: 3,
-          start_cursor: firstPage.next_cursor,
+          start_cursor: firstPage.next_cursor || undefined,
         });
         
         expect(secondPage.results).toBeDefined();
@@ -362,12 +363,13 @@ describe('Filter and Pagination E2E Tests', () => {
       expect(result.results).toBeDefined();
       
       // Verify descending order (handling nulls)
-      const nonNullResults = result.results.filter((r: any) => r.properties.progress !== null && r.properties.progress !== undefined);
+      const nonNullResults = result.results.filter((r) => r.properties.progress !== null && r.properties.progress !== undefined);
       
       for (let i = 1; i < nonNullResults.length; i++) {
         const prev = nonNullResults[i - 1].properties.progress;
         const curr = nonNullResults[i].properties.progress;
-        expect(prev).toBeGreaterThanOrEqual(curr);
+        // Type guard already applied in filter
+        expect(prev!).toBeGreaterThanOrEqual(curr!);
       }
     });
 
@@ -391,11 +393,11 @@ describe('Filter and Pagination E2E Tests', () => {
       const priorityGroups: { [key: string]: any[] } = {};
       
       for (const page of result.results) {
-        const priority = page.properties.priority || 'none';
-        if (!priorityGroups[priority]) {
-          priorityGroups[priority] = [];
+        const priorityName = page.properties.priority?.name || 'none';
+        if (!priorityGroups[priorityName]) {
+          priorityGroups[priorityName] = [];
         }
-        priorityGroups[priority].push(page);
+        priorityGroups[priorityName].push(page);
       }
       
       // Verify date ordering within each priority group
@@ -490,7 +492,11 @@ describe('Filter and Pagination E2E Tests', () => {
       
       // Verify sort order
       for (let i = 1; i < allPages.length; i++) {
-        expect(allPages[i - 1].properties.progress).toBeGreaterThanOrEqual(allPages[i].properties.progress);
+        const prev = allPages[i - 1].properties.progress;
+        const curr = allPages[i].properties.progress;
+        if (prev !== null && prev !== undefined && curr !== null && curr !== undefined) {
+          expect(prev).toBeGreaterThanOrEqual(curr);
+        }
       }
     });
   });

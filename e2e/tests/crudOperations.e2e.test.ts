@@ -4,12 +4,13 @@ import { rateLimitDelay } from '../utils/testHelpers';
 import { TestLifecycle } from '../setup/testLifecycle';
 import { CRUD_TEST_RECORDS } from '../fixtures/testData';
 import { E2E_CONFIG } from '../setup/testEnvironment';
+import type { NotionTypedClient } from '../generated/E2ETestClient';
 
 describe('CRUD Operations E2E Tests', () => {
   let databaseId: string;
   let client: Client;
-  let GeneratedClient: any;
-  let typedClient: any;
+  let GeneratedClient: typeof NotionTypedClient;
+  let typedClient: NotionTypedClient;
   let createdPageId: string;
   let updatePageId: string;
   let deletePageId: string;
@@ -99,6 +100,7 @@ describe('CRUD Operations E2E Tests', () => {
     it('should validate required properties', async () => {
       // This should fail because title is required
       await expect(
+        // @ts-expect-error Testing validation - missing required 'title' property
         typedClient.createPage('E2ETestDatabase', {
           completed: false,
           // Missing required 'title' property
@@ -111,6 +113,7 @@ describe('CRUD Operations E2E Tests', () => {
       await expect(
         typedClient.createPage('E2ETestDatabase', {
           title: 'Test',
+          // @ts-expect-error Testing validation - invalid priority value
           priority: 'Invalid Priority', // Not one of the valid options
           completed: false,
         })
@@ -286,6 +289,7 @@ describe('CRUD Operations E2E Tests', () => {
 
     it('should handle invalid database name', async () => {
       await expect(
+        // @ts-expect-error Testing error handling - invalid database name
         typedClient.queryDatabase('NonExistentDatabase', {})
       ).rejects.toThrow();
     });

@@ -2,13 +2,14 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Client } from '@notionhq/client';
 import { rateLimitDelay } from '../utils/testHelpers';
 import { TestLifecycle } from '../setup/testLifecycle';
+import type { NotionTypedClient } from '../generated/E2ETestClient';
 
 describe('Relation Property E2E Tests', () => {
   let testDatabaseId: string;
   let categoryDatabaseId: string;
   let client: Client;
-  let GeneratedClient: any;
-  let typedClient: any;
+  let GeneratedClient: typeof NotionTypedClient;
+  let typedClient: NotionTypedClient;
   let categoryIds: string[] = [];
   let taskIds: string[] = [];
 
