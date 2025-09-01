@@ -108,7 +108,7 @@ export const E2E_CATEGORY_SCHEMA: DatabaseConfig = {
       id: null,
       name: 'tasks',
       displayName: 'Tasks',
-      notionName: 'タスク',
+      notionName: 'Related to E2E Test Database (カテゴリー)',
       type: 'relation',
       // Reverse relation to E2E Test Database
     },
@@ -133,7 +133,7 @@ export const COLOR_OPTIONS = ['赤', '青', '緑', '黄'];
 /**
  * Property configuration for creating category database
  */
-export const CATEGORY_DATABASE_PROPERTIES = {
+export const CATEGORY_DATABASE_PROPERTIES: any = {
   名前: {
     title: {},
   },
@@ -153,7 +153,7 @@ export const CATEGORY_DATABASE_PROPERTIES = {
  * Property configuration for creating test database
  * Note: Relation property will be added after category database is created
  */
-export const TEST_DATABASE_PROPERTIES_BASE = {
+export const TEST_DATABASE_PROPERTIES_BASE: any = {
   タイトル: {
     title: {},
   },

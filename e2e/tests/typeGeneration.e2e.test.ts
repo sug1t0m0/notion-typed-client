@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { execSync } from 'node:child_process';
 import { verifyGeneratedFiles } from '../utils/testHelpers';
 import { TestLifecycle } from '../setup/testLifecycle';
 import { PRIORITY_OPTIONS } from '../fixtures/testSchemas';

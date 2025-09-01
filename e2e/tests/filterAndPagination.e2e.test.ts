@@ -362,7 +362,7 @@ describe('Filter and Pagination E2E Tests', () => {
       expect(result.results).toBeDefined();
       
       // Verify descending order (handling nulls)
-      const nonNullResults = result.results.filter(r => r.properties.progress !== null && r.properties.progress !== undefined);
+      const nonNullResults = result.results.filter((r: any) => r.properties.progress !== null && r.properties.progress !== undefined);
       
       for (let i = 1; i < nonNullResults.length; i++) {
         const prev = nonNullResults[i - 1].properties.progress;

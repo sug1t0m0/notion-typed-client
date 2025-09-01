@@ -136,7 +136,9 @@ describe('CRUD Operations E2E Tests', () => {
       
       expect(database).toBeDefined();
       expect(database.id).toBe(databaseId);
-      expect(database.title[0].plain_text).toBe('E2E Test Database');
+      if ('title' in database) {
+        expect(database.title[0].plain_text).toBe('E2E Test Database');
+      }
       
       // Verify properties exist
       const properties = Object.keys(database.properties);

@@ -14,8 +14,8 @@ export class ClientGenerator {
       .join(', ');
 
     // Check if any database has status properties
-    const hasStatusProperties = databases.some(db => 
-      db.properties.some(prop => prop.type === 'status')
+    const hasStatusProperties = databases.some((db) =>
+      db.properties.some((prop) => prop.type === 'status')
     );
 
     const statusImports = hasStatusProperties
@@ -89,7 +89,105 @@ interface ResolvedDatabaseConfig {
 }`;
   }
 
+  private generateStatusMethods(): string {
+    return `
+  /**
+   * Get status groups for a property (Type-safe)
+   */
+  getStatusGroups<T extends DatabaseNames, P extends GetStatusProperties<T>>(
+    databaseName: T,
+    propertyName: P
+  ): GetStatusGroups<T, P>[] | undefined {
+    const config = this.getDatabaseConfig(databaseName);
+    const propConfig = config?.properties.find(p => p.name === propertyName);
+    
+    if (propConfig?.type === 'status' && propConfig.groups) {
+      return propConfig.groups.map(g => g.name) as GetStatusGroups<T, P>[];
+    }
+    
+    return undefined;
+  }
+
+  /**
+   * Get status options for a specific group (Type-safe)
+   */
+  getStatusOptionsForGroup<T extends DatabaseNames, P extends GetStatusProperties<T>>(
+    databaseName: T,
+    propertyName: P,
+    groupName: GetStatusGroups<T, P>
+  ): GetStatusGroupMapping<T, P>[GetStatusGroups<T, P>][] {
+    const config = this.getDatabaseConfig(databaseName);
+    const propConfig = config?.properties.find(p => p.name === propertyName);
+    
+    if (propConfig?.type === 'status' && propConfig.groups && propConfig.options) {
+      const group = propConfig.groups.find(g => g.name === groupName);
+      if (group) {
+        return group.option_ids
+          .map(optionId => {
+            const option = propConfig.options?.find(opt => opt.id === optionId);
+            return option?.name;
+          })
+          .filter(Boolean) as GetStatusGroupMapping<T, P>[GetStatusGroups<T, P>][];
+      }
+    }
+    
+    return [] as GetStatusGroupMapping<T, P>[GetStatusGroups<T, P>][];
+  }
+
+  /**
+   * Get the group name for a status option (Type-safe)
+   */
+  getGroupForStatusOption<T extends DatabaseNames, P extends GetStatusProperties<T>>(
+    databaseName: T,
+    propertyName: P,
+    optionName: GetStatusOptions<T, P>
+  ): GetOptionToGroupMapping<T, P>[GetStatusOptions<T, P>] | undefined {
+    const config = this.getDatabaseConfig(databaseName);
+    const propConfig = config?.properties.find(p => p.name === propertyName);
+    
+    if (propConfig?.type === 'status' && propConfig.groups && propConfig.options) {
+      const option = propConfig.options.find(opt => opt.name === optionName);
+      if (option) {
+        const group = propConfig.groups.find(g => g.option_ids.includes(option.id));
+        return group?.name as GetOptionToGroupMapping<T, P>[GetStatusOptions<T, P>];
+      }
+    }
+    
+    return undefined;
+  }
+
+  /**
+   * Validate if an option belongs to a specific group (Type-safe)
+   */
+  isOptionInGroup<T extends DatabaseNames, P extends GetStatusProperties<T>>(
+    databaseName: T,
+    propertyName: P,
+    optionName: GetStatusOptions<T, P>,
+    groupName: GetStatusGroups<T, P>
+  ): boolean {
+    const actualGroup = this.getGroupForStatusOption(databaseName, propertyName, optionName);
+    return (actualGroup as string) === (groupName as string);
+  }
+
+  /**
+   * Get all valid options for a specific group (Type-safe helper)
+   */
+  getValidOptionsForGroup<T extends DatabaseNames, P extends GetStatusProperties<T>, G extends GetStatusGroups<T, P>>(
+    databaseName: T,
+    propertyName: P,
+    groupName: G
+  ): GetStatusGroupMapping<T, P>[G][] {
+    return this.getStatusOptionsForGroup(databaseName, propertyName, groupName) as GetStatusGroupMapping<T, P>[G][];
+  }`;
+  }
+
   private generateClass(databases: ResolvedDatabaseConfig[]): string {
+    // Check if any database has status properties
+    const hasStatusProperties = databases.some((db) =>
+      db.properties.some((prop) => prop.type === 'status')
+    );
+
+    const statusMethods = hasStatusProperties ? this.generateStatusMethods() : '';
     return `export class NotionTypedClient {
   private client: Client;
   private databaseIds: Record<DatabaseNames, string>;
@@ -214,7 +312,18 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
       }));
     
     return {
-      results: results as any,
+      results: results as Array<{
+        id: string;
+        properties: GetDatabaseTypeByName<T>;
+        created_time?: string;
+        last_edited_time?: string;
+        archived?: boolean;
+        url?: string;
+        public_url?: string | null;
+        parent?: unknown;
+        icon?: unknown;
+        cover?: unknown;
+      }>,
       has_more: response.has_more,
       next_cursor: response.next_cursor
     };
@@ -264,7 +373,22 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     let hasMore = true;
     
     while (hasMore) {
-      const response = await this.queryDatabase(databaseName, {
+      const response: {
+        results: Array<{
+          id: string;
+          properties: GetDatabaseTypeByName<T>;
+          created_time?: string;
+          last_edited_time?: string;
+          archived?: boolean;
+          url?: string;
+          public_url?: string | null;
+          parent?: unknown;
+          icon?: unknown;
+          cover?: unknown;
+        }>;
+        has_more: boolean;
+        next_cursor: string | null;
+      } = await this.queryDatabase(databaseName, {
         ...args,
         start_cursor: cursor,
         page_size: args?.page_size || 100
@@ -310,7 +434,22 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     let hasMore = true;
     
     while (hasMore) {
-      const response = await this.queryDatabase(databaseName, {
+      const response: {
+        results: Array<{
+          id: string;
+          properties: GetDatabaseTypeByName<T>;
+          created_time?: string;
+          last_edited_time?: string;
+          archived?: boolean;
+          url?: string;
+          public_url?: string | null;
+          parent?: unknown;
+          icon?: unknown;
+          cover?: unknown;
+        }>;
+        has_more: boolean;
+        next_cursor: string | null;
+      } = await this.queryDatabase(databaseName, {
         ...args,
         start_cursor: cursor,
         page_size: args?.page_size || 100
@@ -655,96 +794,7 @@ ${databases.map((db) => `      '${db.name}': ${JSON.stringify(db, null, 8).split
     };
     
     return configs[databaseName];
-  }
-
-  /**
-   * Get status groups for a property (Type-safe)
-   */
-  getStatusGroups<T extends DatabaseNames, P extends GetStatusProperties<T>>(
-    databaseName: T,
-    propertyName: P
-  ): GetStatusGroups<T, P>[] | undefined {
-    const config = this.getDatabaseConfig(databaseName);
-    const propConfig = config?.properties.find(p => p.name === propertyName);
-    
-    if (propConfig?.type === 'status' && propConfig.groups) {
-      return propConfig.groups.map(g => g.name) as GetStatusGroups<T, P>[];
-    }
-    
-    return undefined;
-  }
-
-  /**
-   * Get status options for a specific group (Type-safe)
-   */
-  getStatusOptionsForGroup<T extends DatabaseNames, P extends GetStatusProperties<T>>(
-    databaseName: T,
-    propertyName: P,
-    groupName: GetStatusGroups<T, P>
-  ): GetStatusGroupMapping<T, P>[GetStatusGroups<T, P>][] {
-    const config = this.getDatabaseConfig(databaseName);
-    const propConfig = config?.properties.find(p => p.name === propertyName);
-    
-    if (propConfig?.type === 'status' && propConfig.groups && propConfig.options) {
-      const group = propConfig.groups.find(g => g.name === groupName);
-      if (group) {
-        return group.option_ids
-          .map(optionId => {
-            const option = propConfig.options?.find(opt => opt.id === optionId);
-            return option?.name;
-          })
-          .filter(Boolean) as GetStatusGroupMapping<T, P>[GetStatusGroups<T, P>][];
-      }
-    }
-    
-    return [] as GetStatusGroupMapping<T, P>[GetStatusGroups<T, P>][];
-  }
-
-  /**
-   * Get the group name for a status option (Type-safe)
-   */
-  getGroupForStatusOption<T extends DatabaseNames, P extends GetStatusProperties<T>>(
-    databaseName: T,
-    propertyName: P,
-    optionName: GetStatusOptions<T, P>
-  ): GetOptionToGroupMapping<T, P>[GetStatusOptions<T, P>] | undefined {
-    const config = this.getDatabaseConfig(databaseName);
-    const propConfig = config?.properties.find(p => p.name === propertyName);
-    
-    if (propConfig?.type === 'status' && propConfig.groups && propConfig.options) {
-      const option = propConfig.options.find(opt => opt.name === optionName);
-      if (option) {
-        const group = propConfig.groups.find(g => g.option_ids.includes(option.id));
-        return group?.name as GetOptionToGroupMapping<T, P>[GetStatusOptions<T, P>];
-      }
-    }
-    
-    return undefined;
-  }
-
-  /**
-   * Validate if an option belongs to a specific group (Type-safe)
-   */
-  isOptionInGroup<T extends DatabaseNames, P extends GetStatusProperties<T>>(
-    databaseName: T,
-    propertyName: P,
-    optionName: GetStatusOptions<T, P>,
-    groupName: GetStatusGroups<T, P>
-  ): boolean {
-    const actualGroup = this.getGroupForStatusOption(databaseName, propertyName, optionName);
-    return (actualGroup as string) === (groupName as string);
-  }
-
-  /**
-   * Get all valid options for a specific group (Type-safe helper)
-   */
-  getValidOptionsForGroup<T extends DatabaseNames, P extends GetStatusProperties<T>, G extends GetStatusGroups<T, P>>(
-    databaseName: T,
-    propertyName: P,
-    groupName: G
-  ): GetStatusGroupMapping<T, P>[G][] {
-    return this.getStatusOptionsForGroup(databaseName, propertyName, groupName) as GetStatusGroupMapping<T, P>[G][];
-  }
+  }${statusMethods}
 
   /**
    * Get the underlying Notion client for advanced usage

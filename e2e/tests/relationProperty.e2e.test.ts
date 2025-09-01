@@ -16,15 +16,15 @@ describe('Relation Property E2E Tests', () => {
     // Get resources from centralized lifecycle
     const lifecycle = TestLifecycle.getInstance();
     const resources = await lifecycle.globalSetup();
-    
+
     testDatabaseId = resources.testDatabaseId;
     categoryDatabaseId = resources.categoryDatabaseId;
     client = resources.client;
     GeneratedClient = resources.GeneratedClient;
-    
+
     // Create typed client instance
     typedClient = new GeneratedClient({ client });
-    
+
     // Get category IDs
     const categoryResponse = await client.databases.query({
       database_id: categoryDatabaseId,
@@ -33,7 +33,7 @@ describe('Relation Property E2E Tests', () => {
     categoryIds = categoryResponse.results
       .filter((p): p is any => p.object === 'page')
       .map(p => p.id);
-    
+
     // Get some task IDs
     const taskResponse = await client.databases.query({
       database_id: testDatabaseId,
@@ -99,7 +99,7 @@ describe('Relation Property E2E Tests', () => {
       await rateLimitDelay();
       const retrieved = await client.pages.retrieve({ page_id: createdTaskId });
       const props = (retrieved as any).properties;
-      
+
       expect(props['カテゴリー']?.relation).toBeDefined();
       expect(props['カテゴリー'].relation).toHaveLength(1);
       expect(props['カテゴリー'].relation[0].id).toBe(categoryIds[0]);
@@ -125,9 +125,9 @@ describe('Relation Property E2E Tests', () => {
       await rateLimitDelay();
       const retrieved = await client.pages.retrieve({ page_id: createdCategoryId });
       const props = (retrieved as any).properties;
-      
-      expect(props['タスク']?.relation).toBeDefined();
-      expect(props['タスク'].relation).toHaveLength(2);
+
+      expect(props['Related to E2E Test Database (カテゴリー)']?.relation).toBeDefined();
+      expect(props['Related to E2E Test Database (カテゴリー)'].relation).toHaveLength(2);
     });
 
     it('should update relations', async () => {
@@ -147,7 +147,7 @@ describe('Relation Property E2E Tests', () => {
       await rateLimitDelay();
       const retrieved = await client.pages.retrieve({ page_id: createdTaskId });
       const props = (retrieved as any).properties;
-      
+
       expect(props['カテゴリー'].relation).toHaveLength(1);
       expect(props['カテゴリー'].relation[0].id).toBe(categoryIds[1]);
     });
@@ -169,7 +169,7 @@ describe('Relation Property E2E Tests', () => {
       await rateLimitDelay();
       const retrieved = await client.pages.retrieve({ page_id: createdTaskId });
       const props = (retrieved as any).properties;
-      
+
       expect(props['カテゴリー'].relation).toHaveLength(0);
     });
 
@@ -191,9 +191,9 @@ describe('Relation Property E2E Tests', () => {
       await rateLimitDelay();
       const retrieved = await client.pages.retrieve({ page_id: created.id });
       const props = (retrieved as any).properties;
-      
+
       expect(props['カテゴリー'].relation).toHaveLength(3);
-      
+
       // Clean up
       await client.pages.update({
         page_id: created.id,
@@ -235,7 +235,7 @@ describe('Relation Property E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // All results should have the specified category
       for (const page of result.results) {
         if (page.properties.category && page.properties.category.length > 0) {
@@ -255,7 +255,7 @@ describe('Relation Property E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // All results should have no category
       for (const page of result.results) {
         expect(page.properties.category).toBeUndefined();
@@ -273,7 +273,7 @@ describe('Relation Property E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // All results should have at least one category
       for (const page of result.results) {
         if (page.properties.category) {
@@ -290,7 +290,7 @@ describe('Relation Property E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Check that relation properties are included
       for (const page of result.results) {
         expect(page.properties).toHaveProperty('category');
@@ -307,7 +307,7 @@ describe('Relation Property E2E Tests', () => {
       });
 
       expect(result.results).toBeDefined();
-      
+
       // Check that reverse relation properties are included
       for (const page of result.results) {
         expect(page.properties).toHaveProperty('tasks');

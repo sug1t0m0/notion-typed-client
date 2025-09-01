@@ -52,7 +52,7 @@ export class DatabaseSetup {
 
       return database?.id || null;
     } catch (error) {
-      logger.error('Failed to find test database', error);
+      logger.error(`Failed to find test database: ${error instanceof Error ? error.message : String(error)}`);
       return null;
     }
   }
@@ -81,7 +81,7 @@ export class DatabaseSetup {
       logger.info(`Category database created: ${database.id}`);
       return database.id;
     } catch (error) {
-      logger.error('Failed to create category database', error);
+      logger.error(`Failed to create category database: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -108,11 +108,8 @@ export class DatabaseSetup {
           カテゴリー: {
             relation: {
               database_id: categoryDatabaseId,
-              type: 'dual_property',
-              dual_property: {
-                synced_property_id: 'タスク',
-                synced_property_name: 'タスク',
-              },
+              type: 'dual_property' as const,
+              dual_property: {} as any,
             },
           },
         },
@@ -123,7 +120,7 @@ export class DatabaseSetup {
       logger.info(`Test database created with relation: ${database.id}`);
       return database.id;
     } catch (error) {
-      logger.error('Failed to create test database', error);
+      logger.error(`Failed to create test database: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -168,7 +165,7 @@ export class DatabaseSetup {
         categoryIds.push(page.id);
         await this.sleep(this.rateLimitDelay);
       } catch (error) {
-        logger.error(`Failed to create category: ${category.name}`, error);
+        logger.error(`Failed to create category: ${category.name} - ${error instanceof Error ? error.message : String(error)}`);
       }
     }
 
@@ -195,7 +192,7 @@ export class DatabaseSetup {
         await this.createTestRecord(databaseId, record, categoryId);
         await this.sleep(this.rateLimitDelay);
       } catch (error) {
-        logger.error(`Failed to create record: ${record.title}`, error);
+        logger.error(`Failed to create record: ${record.title} - ${error instanceof Error ? error.message : String(error)}`);
       }
     }
 
@@ -315,7 +312,7 @@ export class DatabaseSetup {
 
       logger.info('Test data cleanup complete');
     } catch (error) {
-      logger.error('Failed to cleanup test data', error);
+      logger.error(`Failed to cleanup test data: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -366,7 +363,7 @@ export class DatabaseSetup {
       // Note: Notion API doesn't support database deletion
       // We can only archive all pages
       await this.cleanupTestData(databaseId);
-      logger.warn('Database deletion is not supported by Notion API. Pages have been archived.');
+      logger.warning('Database deletion is not supported by Notion API. Pages have been archived.');
     } else {
       await this.cleanupTestData(databaseId);
     }
