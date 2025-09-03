@@ -1,9 +1,8 @@
 import { NotionTypedConfig } from '@sug1t0m0/notion-typed-client';
-
 const config: NotionTypedConfig = {
     databases: [
         {
-            id: '22add72d0571805fbf1cd6ac883716c0', // Your database ID
+            id: '25dd880f2d0b806b9c73f12c66543414', // Your database ID
             name: 'PlansDatabase', // TypeScript type name
             displayName: 'プランデータベース', // Display name for logs
             notionName: 'Plans', // Actual name in Notion
@@ -52,20 +51,18 @@ const config: NotionTypedConfig = {
                     type: 'date',
                 },
                 {
-                    id: null,
+                    id: "%7DW%60%5C",
                     name: 'hogeStatus',
                     displayName: 'hogeステータス',
                     notionName: 'hogeステータス',
-                    type: null,
-                },
-            ],
-        },
-        // Add more databases here
+                    type: "status"
+                }
+            ]
+        }
     ],
     output: {
         path: './notion-typed-codegen',
         clientName: 'client',
     },
 };
-
 export default config;

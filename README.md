@@ -43,11 +43,13 @@ yarn add -D @sug1t0m0/notion-typed-client
 npx notion-typed-client init
 ```
 
-Set your Notion API key in `.env` file:
+Set your Notion API key as an environment variable or in your project's `.env` file:
 
 ```env
 NOTION_API_KEY=your_notion_api_key_here
 ```
+
+> **Note:** For examples and testing, see the `/example` and `/e2e` directories which have their own `.env.example` files.
 
 ### 2. Create Configuration File
 
@@ -499,7 +501,7 @@ function processPlans(plans: PlansDatabase[]): void {
 ## Troubleshooting
 
 ### Invalid API Key
-Verify that the correct Notion API key is set in your `.env` file.
+Verify that the correct Notion API key is set in your environment variables or project's `.env` file.
 
 ### Database Not Found
 - Check that your Notion API key has access permissions to the database
