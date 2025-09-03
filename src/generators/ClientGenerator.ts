@@ -214,7 +214,18 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
   async createPage<T extends DatabaseNames>(
     databaseName: T,
     properties: GetCreateType<T>
-  ): Promise<PageObjectResponse | PartialPageObjectResponse> {
+  ): Promise<{
+    id: string;
+    properties: GetDatabaseTypeByName<T>;
+    created_time: string;
+    last_edited_time: string;
+    archived: boolean;
+    url: string;
+    public_url: string | null;
+    parent: unknown;
+    icon: unknown;
+    cover: unknown;
+  }> {
     const databaseId = this.getDatabaseId(databaseName);
     
     // Validate properties
@@ -226,10 +237,21 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     // Convert properties to Notion API format
     const notionProperties = this.convertPropertiesToNotion(databaseName, properties as unknown as Record<string, unknown>);
     
-    return await this.client.pages.create({
+    const response = await this.client.pages.create({
       parent: { database_id: databaseId },
       properties: notionProperties as any
     });
+
+    // Ensure we have a full page response
+    if (!('properties' in response)) {
+      throw new Error('Failed to create page: received partial response');
+    }
+
+    // Convert response properties to typed format
+    return {
+      ...response,
+      properties: this.convertPropertiesFromNotion(databaseName, response.properties) as unknown as GetDatabaseTypeByName<T>
+    } as any;
   }
 
   /**
@@ -239,7 +261,18 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     pageId: string,
     databaseName: T,
     properties: GetUpdateType<T>
-  ): Promise<PageObjectResponse | PartialPageObjectResponse> {
+  ): Promise<{
+    id: string;
+    properties: GetDatabaseTypeByName<T>;
+    created_time: string;
+    last_edited_time: string;
+    archived: boolean;
+    url: string;
+    public_url: string | null;
+    parent: unknown;
+    icon: unknown;
+    cover: unknown;
+  }> {
     // Validate properties
     const validator = validators.update[databaseName];
     if (validator && !validator(properties)) {
@@ -249,10 +282,21 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     // Convert properties to Notion API format
     const notionProperties = this.convertPropertiesToNotion(databaseName, properties as unknown as Record<string, unknown>);
     
-    return await this.client.pages.update({
+    const response = await this.client.pages.update({
       page_id: pageId,
       properties: notionProperties as any
     });
+
+    // Ensure we have a full page response
+    if (!('properties' in response)) {
+      throw new Error('Failed to update page: received partial response');
+    }
+
+    // Convert response properties to typed format
+    return {
+      ...response,
+      properties: this.convertPropertiesFromNotion(databaseName, response.properties) as unknown as GetDatabaseTypeByName<T>
+    } as any;
   }
 
   /**
