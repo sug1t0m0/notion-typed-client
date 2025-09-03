@@ -46,7 +46,9 @@ async function testTypedCreate() {
 
     console.log('✅ Successfully created page!');
     console.log('  Page ID:', result.id);
+    // Now we can directly access created_time without type guards!
     console.log('  Created:', new Date(result.created_time).toLocaleString('ja-JP'));
+    console.log('  Last edited:', new Date(result.last_edited_time).toLocaleString('ja-JP'));
 
     // Retrieve and verify the created page (type-safe)
     console.log('\n🔍 Retrieving created page...');

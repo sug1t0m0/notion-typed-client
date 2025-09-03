@@ -16,7 +16,7 @@
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
     "@notionhq/client": "^4.0.2",
-    "@sug1t0m0/notion-typed-client": "^1.5.0",
+    "@sug1t0m0/notion-typed-client": "workspace:^",
     "dotenv": "^17.2.1"
   },
   "devDependencies": {

@@ -6,12 +6,17 @@
 
 ### 1. 依存関係のインストール
 
+このexampleディレクトリは開発環境ではpnpm workspaceとして設定されており、ローカルの最新バージョンを自動的に使用します。
+
 ```bash
-# Install the package from NPM
-pnpm add -D @sug1t0m0/notion-typed-client
-# Or install all dependencies
+# リポジトリをクローン後、ルートディレクトリで実行
 pnpm install
+
+# スタンドアロンプロジェクトとして使用する場合
+pnpm add -D @sug1t0m0/notion-typed-client
 ```
+
+**Note:** 開発環境では`package.json`の`workspace:^`プロトコルによって、パッケージの最新ローカルビルドが常に使用されます。
 
 ### 2. 環境変数の設定
 
