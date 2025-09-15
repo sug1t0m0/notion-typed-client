@@ -100,7 +100,7 @@ export const validators = {
    * Get validation errors from the last validation
    */
   getErrors(databaseName: string, type: 'main' | 'create' | 'update' = 'main'): any[] | null {
-    let validator;
+    let validator = undefined;
     switch (type) {
       case 'create':
         validator = createValidators[databaseName];

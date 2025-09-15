@@ -109,6 +109,33 @@ Refer to `package.json` for available commands. Key commands:
 - `pnpm test` - Run tests
 - `pnpm run build` - Build the project
 
+### E2E Generated Code Quality Check
+
+E2E test generated code is automatically prepared and validated:
+
+**Important**: Ensure `e2e/generated` is NOT excluded in biome.json
+
+**Commands**
+- `npm run lint:e2e` - Lint check generated files (auto-generates if needed)
+- `npm run typecheck:e2e` - Full validation (generate → lint → typecheck)
+- `npm run e2e:clean` - Delete generated files (for regeneration)
+
+**Auto-skip Feature**
+- `e2e:prepare` automatically skips if generated files already exist
+- To force regeneration, run `npm run e2e:clean` first
+
+**Handling Quality Check Errors**
+When Biome errors occur in generated code:
+1. Identify the pattern from error messages
+2. Fix the corresponding generator (ClientGenerator.ts or TypeGenerator.ts)
+3. Run `npm run e2e:clean && npm run lint:e2e` to regenerate and verify
+
+**Generator Fix Mapping**
+- Indent/format errors → Check template string indentation
+- Import errors → Import generation sections in generators
+- Type definition errors → TypeGenerator.ts type generation logic
+- Client method errors → ClientGenerator.ts method generation sections
+
 ## Architecture
 
 For detailed architecture documentation including:

@@ -663,7 +663,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
       for (const groupName of groupNames) {
         const group = propConfig.groups?.find(g => g.name === groupName);
         if (group) {
-          group.option_ids.forEach(id => excludedOptionIds.add(id));
+          group.option_ids.forEach(id => { excludedOptionIds.add(id); });
         }
       }
       
@@ -714,7 +714,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
         const groupNames = value as string[];
         const allOptions = new Set<string>();
         for (const groupName of groupNames) {
-          getOptionsForGroup(groupName).forEach(opt => allOptions.add(opt));
+          getOptionsForGroup(groupName).forEach(opt => { allOptions.add(opt); });
         }
         
         const optionsArray = Array.from(allOptions);
@@ -908,7 +908,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
       case 'select':
         return val[config.type]?.name || null;
       
-      case 'status':
+      case 'status': {
         const statusValue = val[config.type];
         if (statusValue && statusValue.name && config.groups && config.groups.length > 0) {
           // Find the group for this status option
@@ -919,6 +919,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
           };
         }
         return statusValue;
+      }
       
       case 'multi_select':
         return val.multi_select || [];
@@ -993,9 +994,6 @@ ${databases.map((db) => `      '${db.name}': ${JSON.stringify(db, null, 8).split
   }
 }
 
-// Type helper for DatabaseIdMapping
-type DatabaseIdMapping = {
-${databases.map((db) => `  '${db.id}': ${db.name};`).join('\n')}
-};`;
+`;
   }
 }
