@@ -416,7 +416,7 @@ npx notion-typed-client validate [options]
 - `number` - Number
 - `select` - Single Select (options auto-fetched)
 - `multi_select` - Multi Select (options auto-fetched)
-- `status` - Status (options auto-fetched)
+- `status` - Status (options and groups auto-fetched)
 - `date` - Date
 - `people` - People
 - `files` - Files
