@@ -116,19 +116,20 @@ E2E test generated code is automatically prepared and validated:
 **Important**: Ensure `e2e/generated` is NOT excluded in biome.json
 
 **Commands**
-- `npm run lint:e2e` - Lint check generated files (auto-generates if needed)
-- `npm run typecheck:e2e` - Full validation (generate → lint → typecheck)
-- `npm run e2e:clean` - Delete generated files (for regeneration)
+- `npm run typecheck:e2e` - Type check E2E test code
+- `npm run generate:e2e` - Force regenerate files (clean → prepare)
+- `npm run clean:e2e` - Delete generated files
+- `npm run prepare:e2e` - Generate files if they don't exist
 
 **Auto-skip Feature**
-- `e2e:prepare` automatically skips if generated files already exist
-- To force regeneration, run `npm run e2e:clean` first
+- `prepare:e2e` automatically skips if generated files already exist
+- To force regeneration, use `npm run generate:e2e`
 
 **Handling Quality Check Errors**
 When Biome errors occur in generated code:
 1. Identify the pattern from error messages
 2. Fix the corresponding generator (ClientGenerator.ts or TypeGenerator.ts)
-3. Run `npm run e2e:clean && npm run lint:e2e` to regenerate and verify
+3. Run `npm run generate:e2e` to regenerate and then `npm run check` to verify
 
 **Generator Fix Mapping**
 - Indent/format errors → Check template string indentation
