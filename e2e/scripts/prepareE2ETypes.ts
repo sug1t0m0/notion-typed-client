@@ -11,6 +11,20 @@ import * as dotenv from 'dotenv';
 import { DatabaseSetup } from '../setup/databaseSetup';
 import { E2ETypeGenerator } from '../utils/typeGenerator';
 
+// Check if generated files already exist
+const generatedPath = path.resolve(process.cwd(), 'e2e', 'generated');
+const requiredFiles = ['E2ETestClient.ts', 'types.ts', 'validators.ts', 'schemas.json'];
+
+const filesExist =
+  fs.existsSync(generatedPath) &&
+  requiredFiles.every((file) => fs.existsSync(path.join(generatedPath, file)));
+
+if (filesExist) {
+  console.log('✅ Generated files already exist. Skipping generation.');
+  console.log('   To force regeneration, delete e2e/generated/ directory first.');
+  process.exit(0);
+}
+
 // Load E2E environment variables
 // In CI environments, variables are set directly. In local development, load from .env.e2e
 const envPath = path.resolve(process.cwd(), 'e2e', '.env.e2e');

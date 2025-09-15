@@ -19,60 +19,112 @@ async function testTypedCreate() {
     client: notionClient,
   });
 
-  console.log('Creating data with typed Notion client...\n');
+  console.log('Creating data with typed Notion client (with Status Group Filtering)...\n');
 
   try {
-    // Create type-safe data
-    const newPlan: CreatePlansDatabase = {
-      name: '1時間会議（14:00-15:00） ' + new Date().toLocaleDateString('ja-JP'),
-      multiSelect: ['あ', 'う'], // Type-safe: options are restricted
-      startDate: {
-        start: '2025-08-16T14:00:00+09:00', // 2:00 PM start
+    // 1. Create test data with different statuses
+    console.log('📝 Creating test data with various statuses...');
+    const testData: CreatePlansDatabase[] = [
+      {
+        name: 'Task A - Todo ' + new Date().toLocaleDateString('ja-JP'),
+        hogeStatus: '未着手',
+        multiSelect: ['あ'],
       },
-      endDate: {
-        start: '2025-08-16T15:00:00+09:00', // 3:00 PM end (1 hour)
+      {
+        name: 'Task B - In Progress ' + new Date().toLocaleDateString('ja-JP'),
+        hogeStatus: '進行中',
+        multiSelect: ['い'],
       },
-    };
+      {
+        name: 'Task C - Complete ' + new Date().toLocaleDateString('ja-JP'),
+        hogeStatus: '完了',
+        multiSelect: ['う'],
+      },
+    ];
 
-    console.log('📝 Creating new plan with data:');
-    console.log('  Name:', newPlan.name);
-    console.log('  MultiSelect:', newPlan.multiSelect);
-    console.log('  Start Date:', newPlan.startDate?.start);
-    console.log('  End Date:', newPlan.endDate?.start);
-    console.log();
+    for (const data of testData) {
+      const result = await client.createPage('PlansDatabase', data);
+      console.log(`  ✅ Created: ${data.name} with status: ${data.hogeStatus}`);
+    }
 
-    // Add to database (type-checked)
-    const result = await client.createPage('PlansDatabase', newPlan);
+    // 2. Query using Status Group Filtering (NEW in v6!)
+    console.log('\n🎯 Query using Status Group Filtering:');
 
-    console.log('✅ Successfully created page!');
-    console.log('  Page ID:', result.id);
-    // Now we can directly access created_time without type guards!
-    console.log('  Created:', new Date(result.created_time).toLocaleString('ja-JP'));
-    console.log('  Last edited:', new Date(result.last_edited_time).toLocaleString('ja-JP'));
+    // Filter by single group
+    console.log('\n📋 Fetching all To-do items...');
+    const todoItems = await client.queryDatabase('PlansDatabase', {
+      filter: {
+        property: 'hogeStatus',
+        status_group: { equals: 'To-do' }, // Type-safe group name!
+      },
+    });
+    console.log(`  Found ${todoItems.results.length} To-do items`);
 
-    // Retrieve and verify the created page (type-safe)
-    console.log('\n🔍 Retrieving created page...');
-    const retrievedPage = await client.getPage(result.id, 'PlansDatabase');
+    // Filter by multiple groups
+    console.log('\n📊 Fetching active items (To-do or In progress)...');
+    const activeItems = await client.queryDatabase('PlansDatabase', {
+      filter: {
+        property: 'hogeStatus',
+        status_group: { in_any: ['To-do', 'In progress'] }, // Type-safe group names!
+      },
+    });
+    console.log(`  Found ${activeItems.results.length} active items`);
+    activeItems.results.slice(0, 3).forEach((item) => {
+      console.log(`    - ${item.properties.name}: ${item.properties.hogeStatus?.name || 'N/A'}`);
+    });
 
-    console.log('📋 Retrieved page properties:');
-    console.log('  Name:', retrievedPage.properties.name); // Type-safe access
-    console.log(
-      '  MultiSelect:',
-      retrievedPage.properties.multiSelect?.map((option) => option.name)
-    );
-    console.log(
-      '  Start Date:',
-      retrievedPage.properties.startDate
-        ? `${retrievedPage.properties.startDate.start}${retrievedPage.properties.startDate.end ? ' ~ ' + retrievedPage.properties.startDate.end : ''}`
-        : 'N/A'
-    );
-    console.log(
-      '  End Date:',
-      retrievedPage.properties.endDate
-        ? `${retrievedPage.properties.endDate.start}${retrievedPage.properties.endDate.end ? ' ~ ' + retrievedPage.properties.endDate.end : ''}`
-        : 'N/A'
-    );
-    console.log('  Unique ID:', retrievedPage.properties.id || 'N/A');
+    // 3. Compare with traditional filtering
+    console.log('\n🔍 Comparison: Status Group vs Traditional Filtering:');
+
+    // Traditional way (verbose)
+    const traditionalActive = await client.queryDatabase('PlansDatabase', {
+      filter: {
+        or: [
+          { property: 'hogeStatus', status: { equals: '未着手' } },
+          { property: 'hogeStatus', status: { equals: '進行中' } },
+        ],
+      },
+    });
+    console.log(`  Traditional filter: ${traditionalActive.results.length} results`);
+
+    // New way with status groups (clean, maintainable)
+    const groupBasedActive = await client.queryDatabase('PlansDatabase', {
+      filter: {
+        property: 'hogeStatus',
+        status_group: { in_any: ['To-do', 'In progress'] },
+      },
+    });
+    console.log(`  Group-based filter: ${groupBasedActive.results.length} results`);
+    console.log('  ✅ Results are the same!');
+
+    // 4. Complex filter combining status groups with other properties
+    console.log('\n🎯 Complex filter: High-priority active items...');
+    const highPriorityActive = await client.queryDatabase('PlansDatabase', {
+      filter: {
+        and: [
+          {
+            property: 'hogeStatus',
+            status_group: { in_any: ['To-do', 'In progress'] },
+          },
+          {
+            property: 'multiSelect',
+            multi_select: { contains: 'あ' },
+          },
+        ],
+      },
+      sorts: [{ property: 'startDate', direction: 'ascending' }],
+    });
+    console.log(`  Found ${highPriorityActive.results.length} high-priority active items`);
+
+    // 5. Exclude completed items
+    console.log('\n🔄 Fetching non-completed items...');
+    const notCompleted = await client.queryDatabase('PlansDatabase', {
+      filter: {
+        property: 'hogeStatus',
+        status_group: { does_not_equal: 'Complete' },
+      },
+    });
+    console.log(`  Found ${notCompleted.results.length} non-completed items`);
 
     console.log('\n🎉 Test completed successfully!');
   } catch (error) {
@@ -88,9 +140,12 @@ testTypedCreate();
 2. Automatic TypeScript type generation
 3. Auto-completion for properties
 4. Type constraints for select options ('あ' | 'い' | 'う')
-5. Compile-time type checking
-6. Runtime validation
-7. Type-safe access to API responses
+5. Type constraints for status properties
+   - Individual status options ('未着手' | '進行中' | '完了')
+   - Status group names ('To-do' | 'In progress' | 'Complete')
+6. Compile-time type checking
+7. Runtime validation
+8. Type-safe access to API responses
 
 📝 Solves development challenges from test-with-notion-client.ts:
 - No need to manually research property types

@@ -14,7 +14,7 @@ async function testSimpleCreate() {
   try {
     // Create properties directly in Notion API format
     const result = await notion.pages.create({
-      parent: { database_id: '22add72d0571805fbf1cd6ac883716c0' },
+      parent: { database_id: '25dd880f2d0b806b9c73f12c66543414' },
       properties: {
         名前: {
           title: [
@@ -94,7 +94,7 @@ async function testSimpleCreate() {
 
 testSimpleCreate();
 
-/* 
+/*
 【Standard Notion API Client Features】
 1. General-purpose and simple API
 2. Supports any database structure

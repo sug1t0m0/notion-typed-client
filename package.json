@@ -22,10 +22,13 @@
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "check:unsafe": "biome check --write --unsafe .",
-    "ci": "npm run typecheck && npm run typecheck:e2e && npm run check && npm run test && npm run build && npm run audit",
+    "ci": "npm run generate:e2e && npm run typecheck && npm run typecheck:e2e && npm run check && npm run test && npm run build && npm run audit",
     "audit": "pnpm audit",
     "typecheck": "tsc --noEmit",
-    "typecheck:e2e": "npx ts-node e2e/scripts/prepareE2ETypes.ts && tsc --noEmit -p e2e/tsconfig.json",
+    "prepare:e2e": "npx ts-node e2e/scripts/prepareE2ETypes.ts",
+    "clean:e2e": "rm -rf e2e/generated e2e/e2e.notion-typed.config.ts",
+    "generate:e2e": "npm run clean:e2e && npm run prepare:e2e",
+    "typecheck:e2e": "tsc --noEmit -p e2e/tsconfig.json",
     "prepublishOnly": "npm run build",
     "release:patch": "npm version patch --no-git-tag-version",
     "release:minor": "npm version minor --no-git-tag-version",
@@ -78,6 +81,7 @@
     "happy-dom": "^18.0.1",
     "jest": "^30.0.5",
     "ts-jest": "^29.4.1",
+    "vite": "^7.1.5",
     "vitest": "^3.2.4"
   }
 }

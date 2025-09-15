@@ -606,6 +606,16 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
       const propConfig = config?.properties.find(p => p.name === filterObj.property);
       
       if (propConfig) {
+        // Special handling for status_group filters
+        if ('status_group' in filterObj && propConfig.type === 'status' && propConfig.groups) {
+          return this.convertStatusGroupFilter(
+            databaseName,
+            filterObj.property as string,
+            filterObj.status_group as Record<string, unknown>,
+            propConfig
+          );
+        }
+        
         const convertedFilter = { ...filterObj };
         convertedFilter.property = propConfig.notionName;
         return convertedFilter;
@@ -618,6 +628,141 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
     }
     
     return filterObj;
+  }
+
+  /**
+   * Convert status_group filter to OR filter with individual options
+   */
+  private convertStatusGroupFilter(
+    databaseName: string,
+    propertyName: string,
+    groupFilter: Record<string, unknown>,
+    propConfig: ResolvedPropertyConfig
+  ): unknown {
+    const notionPropertyName = propConfig.notionName;
+    
+    // Extract the filter operation and value
+    const [operation, value] = Object.entries(groupFilter)[0];
+    
+    // Helper function to get options for a group
+    const getOptionsForGroup = (groupName: string): string[] => {
+      const group = propConfig.groups?.find(g => g.name === groupName);
+      if (!group) return [];
+      
+      return group.option_ids
+        .map(optionId => {
+          const option = propConfig.options?.find(opt => opt.id === optionId);
+          return option?.name;
+        })
+        .filter((name): name is string => name !== undefined);
+    };
+    
+    // Helper function to get all options NOT in specified groups
+    const getOptionsNotInGroups = (groupNames: string[]): string[] => {
+      const excludedOptionIds = new Set<string>();
+      for (const groupName of groupNames) {
+        const group = propConfig.groups?.find(g => g.name === groupName);
+        if (group) {
+          group.option_ids.forEach(id => { excludedOptionIds.add(id); });
+        }
+      }
+      
+      return propConfig.options
+        ?.filter(opt => !excludedOptionIds.has(opt.id))
+        .map(opt => opt.name) || [];
+    };
+    
+    switch (operation) {
+      case 'equals': {
+        // Group equals -> OR of all options in the group
+        const options = getOptionsForGroup(value as string);
+        if (options.length === 0) {
+          // No options in group, return impossible filter
+          return { property: notionPropertyName, status: { equals: '__INVALID__' } };
+        }
+        if (options.length === 1) {
+          return { property: notionPropertyName, status: { equals: options[0] } };
+        }
+        return {
+          or: options.map(optionName => ({
+            property: notionPropertyName,
+            status: { equals: optionName }
+          }))
+        };
+      }
+      
+      case 'does_not_equal': {
+        // Group does_not_equal -> AND of all NOT equals for options in the group
+        const options = getOptionsForGroup(value as string);
+        if (options.length === 0) {
+          // No options in group, all options are valid
+          return { property: notionPropertyName, status: { is_not_empty: true } };
+        }
+        if (options.length === 1) {
+          return { property: notionPropertyName, status: { does_not_equal: options[0] } };
+        }
+        return {
+          and: options.map(optionName => ({
+            property: notionPropertyName,
+            status: { does_not_equal: optionName }
+          }))
+        };
+      }
+      
+      case 'in_any': {
+        // in_any groups -> OR of all options in any of the groups
+        const groupNames = value as string[];
+        const allOptions = new Set<string>();
+        for (const groupName of groupNames) {
+          getOptionsForGroup(groupName).forEach(opt => { allOptions.add(opt); });
+        }
+        
+        const optionsArray = Array.from(allOptions);
+        if (optionsArray.length === 0) {
+          return { property: notionPropertyName, status: { equals: '__INVALID__' } };
+        }
+        if (optionsArray.length === 1) {
+          return { property: notionPropertyName, status: { equals: optionsArray[0] } };
+        }
+        return {
+          or: optionsArray.map(optionName => ({
+            property: notionPropertyName,
+            status: { equals: optionName }
+          }))
+        };
+      }
+      
+      case 'not_in_any': {
+        // not_in_any groups -> exclude all options in any of the groups
+        const groupNames = value as string[];
+        const remainingOptions = getOptionsNotInGroups(groupNames);
+        
+        if (remainingOptions.length === 0) {
+          // All options are excluded, use is_empty
+          return { property: notionPropertyName, status: { is_empty: true } };
+        }
+        if (remainingOptions.length === 1) {
+          return { property: notionPropertyName, status: { equals: remainingOptions[0] } };
+        }
+        // Use OR for remaining valid options
+        return {
+          or: remainingOptions.map(optionName => ({
+            property: notionPropertyName,
+            status: { equals: optionName }
+          }))
+        };
+      }
+      
+      case 'is_empty':
+        return { property: notionPropertyName, status: { is_empty: true } };
+      
+      case 'is_not_empty':
+        return { property: notionPropertyName, status: { is_not_empty: true } };
+      
+      default:
+        // Fallback to original filter with property name conversion
+        return { property: notionPropertyName, status: groupFilter };
+    }
   }
 
   /**
@@ -763,7 +908,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
       case 'select':
         return val[config.type]?.name || null;
       
-      case 'status':
+      case 'status': {
         const statusValue = val[config.type];
         if (statusValue && statusValue.name && config.groups && config.groups.length > 0) {
           // Find the group for this status option
@@ -774,6 +919,7 @@ ${databases.map((db) => `      '${db.name}': '${db.id}'`).join(',\n')}
           };
         }
         return statusValue;
+      }
       
       case 'multi_select':
         return val.multi_select || [];
@@ -848,9 +994,6 @@ ${databases.map((db) => `      '${db.name}': ${JSON.stringify(db, null, 8).split
   }
 }
 
-// Type helper for DatabaseIdMapping
-type DatabaseIdMapping = {
-${databases.map((db) => `  '${db.id}': ${db.name};`).join('\n')}
-};`;
+`;
   }
 }

@@ -293,6 +293,15 @@ export type MultiSelectFilter<T extends string> =
   | { is_empty: true }
   | { is_not_empty: true };
 
+// Status group filter - new type for filtering by status groups
+export type StatusGroupFilter<Groups extends string> = 
+  | { equals: Groups }
+  | { does_not_equal: Groups }
+  | { in_any: Groups[] }
+  | { not_in_any: Groups[] }
+  | { is_empty: true }
+  | { is_not_empty: true };
+
 // People and relation filters
 export type PeopleFilter = 
   | { contains: string }
@@ -408,10 +417,31 @@ export type CompoundFilter<T> = {
           filterType = 'RollupFilter';
           break;
         case 'select':
-        case 'status':
           if (prop.options && prop.options.length > 0) {
             const optionsType = `${database.name}${propertyName}Options`;
             filterType = `SelectFilter<${optionsType}>`;
+          } else {
+            filterType = 'SelectFilter<string>';
+          }
+          break;
+        case 'status':
+          // Status properties are handled specially to support both individual options and groups
+          if (prop.options && prop.options.length > 0) {
+            const optionsType = `${database.name}${propertyName}Options`;
+            // Generate both status and status_group filters for status properties
+            if (prop.groups && prop.groups.length > 0) {
+              const groupsType = `${database.name}${propertyName}Groups`;
+              // Create a special combined filter type for status
+              propertyFilters.push(`export type ${database.name}${propertyName}PropertyFilter = {
+  property: '${prop.name}';
+  status?: SelectFilter<${optionsType}>;
+  status_group?: StatusGroupFilter<${groupsType}>;
+};`);
+              continue; // Skip the default generation below
+            } else {
+              // No groups, treat as regular select
+              filterType = `SelectFilter<${optionsType}>`;
+            }
           } else {
             filterType = 'SelectFilter<string>';
           }
