@@ -77,6 +77,14 @@ export const E2E_TEST_SCHEMA: DatabaseConfig = {
       type: 'relation',
       // Relation to Categories database
     },
+    {
+      id: null,
+      name: 'status',
+      displayName: 'Status',
+      notionName: 'ステータス',
+      type: 'status',
+      // Status groups and options must be configured manually
+    },
   ],
 };
 
@@ -131,68 +139,10 @@ export const TAG_OPTIONS = ['重要', '確認待ち', 'バグ', '改善'];
 export const COLOR_OPTIONS = ['赤', '青', '緑', '黄'];
 
 /**
- * Property configuration for creating category database
+ * Expected status options (must be configured manually in Notion)
  */
-// biome-ignore lint/suspicious/noExplicitAny: Notion API property definitions require dynamic typing
-export const CATEGORY_DATABASE_PROPERTIES: any = {
-  名前: {
-    title: {},
-  },
-  色: {
-    select: {
-      options: [
-        { name: '赤', color: 'red' },
-        { name: '青', color: 'blue' },
-        { name: '緑', color: 'green' },
-        { name: '黄', color: 'yellow' },
-      ],
-    },
-  },
-};
-
-/**
- * Property configuration for creating test database
- * Note: Relation property will be added after category database is created
- */
-// biome-ignore lint/suspicious/noExplicitAny: Notion API property definitions require dynamic typing
-export const TEST_DATABASE_PROPERTIES_BASE: any = {
-  タイトル: {
-    title: {},
-  },
-  説明: {
-    rich_text: {},
-  },
-  優先度: {
-    select: {
-      options: [
-        { name: '低', color: 'gray' },
-        { name: '中', color: 'yellow' },
-        { name: '高', color: 'red' },
-      ],
-    },
-  },
-  タグ: {
-    multi_select: {
-      options: [
-        { name: '重要', color: 'red' },
-        { name: '確認待ち', color: 'yellow' },
-        { name: 'バグ', color: 'orange' },
-        { name: '改善', color: 'blue' },
-      ],
-    },
-  },
-  担当者: {
-    people: {},
-  },
-  進捗率: {
-    number: {
-      format: 'percent',
-    },
-  },
-  期限: {
-    date: {},
-  },
-  完了: {
-    checkbox: {},
-  },
+export const STATUS_OPTIONS = {
+  'To Do': ['未着手'],
+  'In Progress': ['進行中', 'レビュー待ち'],
+  Complete: ['完了'],
 };

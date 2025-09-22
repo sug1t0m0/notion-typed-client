@@ -62,28 +62,38 @@ async function prepareE2ETypes() {
   // biome-ignore lint/style/noNonNullAssertion: Variable validated above
   const dbSetup = new DatabaseSetup(NOTION_API_KEY!);
 
-  // 2. Create or find test databases
-  console.log('📊 Setting up test databases...');
+  // 2. Find test databases (must be created manually)
+  console.log('🔍 Looking for manually created test databases...');
 
-  // First, find or create category database
-  let categoryDatabaseId = await dbSetup.findTestDatabase('E2E Categories');
+  // Find category database
+  const categoryDatabaseId = await dbSetup.findTestDatabase('E2E Categories');
   if (!categoryDatabaseId) {
-    console.log('Creating new category database...');
-    // biome-ignore lint/style/noNonNullAssertion: Variable validated above
-    categoryDatabaseId = await dbSetup.createCategoryDatabase(NOTION_PARENT_PAGE_ID!);
-  } else {
-    console.log('Using existing category database:', categoryDatabaseId);
+    console.error('❌ Category database "E2E Categories" not found!');
+    console.error('');
+    console.error('Please create the test databases manually before running this script:');
+    console.error('1. Create "E2E Categories" database in Notion');
+    console.error('2. Create "E2E Test Database" in Notion');
+    console.error('3. Configure all properties including Status');
+    console.error('4. Share both databases with your integration');
+    console.error('5. See e2e/DATABASE_TEMPLATE.md for the exact schema');
+    process.exit(1);
   }
+  console.log('Found category database:', categoryDatabaseId);
 
-  // Then, find or create test database
-  let testDatabaseId = await dbSetup.findTestDatabase('E2E Test Database');
+  // Find test database
+  const testDatabaseId = await dbSetup.findTestDatabase('E2E Test Database');
   if (!testDatabaseId) {
-    console.log('Creating new test database...');
-    // biome-ignore lint/style/noNonNullAssertion: Variable validated above
-    testDatabaseId = await dbSetup.createTestDatabase(NOTION_PARENT_PAGE_ID!, categoryDatabaseId);
-  } else {
-    console.log('Using existing test database:', testDatabaseId);
+    console.error('❌ Test database "E2E Test Database" not found!');
+    console.error('');
+    console.error('Please create the test databases manually before running this script:');
+    console.error('1. Create "E2E Categories" database in Notion');
+    console.error('2. Create "E2E Test Database" in Notion');
+    console.error('3. Configure all properties including Status');
+    console.error('4. Share both databases with your integration');
+    console.error('5. See e2e/DATABASE_TEMPLATE.md for the exact schema');
+    process.exit(1);
   }
+  console.log('Found test database:', testDatabaseId);
 
   // 3. Use shared type generator to create config and build types
   try {

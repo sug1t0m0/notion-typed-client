@@ -1,21 +1,19 @@
 import { Client } from '@notionhq/client';
 import { Logger } from '../../src/utils/Logger';
 import { getAllTestRecords, type TestRecord } from '../fixtures/testData';
-import {
-  CATEGORY_DATABASE_PROPERTIES,
-  E2E_CATEGORY_SCHEMA,
-  E2E_TEST_SCHEMA,
-  TEST_DATABASE_PROPERTIES_BASE,
-} from '../fixtures/testSchemas';
+import { E2E_CATEGORY_SCHEMA, E2E_TEST_SCHEMA } from '../fixtures/testSchemas';
+import { DatabaseValidator } from './DatabaseValidator';
 
 const logger = new Logger('E2E:DatabaseSetup');
 
 export class DatabaseSetup {
   private client: Client;
+  private validator: DatabaseValidator;
   private rateLimitDelay: number;
 
   constructor(apiKey: string, rateLimitDelay = 350) {
     this.client = new Client({ auth: apiKey });
+    this.validator = new DatabaseValidator(apiKey);
     this.rateLimitDelay = rateLimitDelay;
   }
 
@@ -60,75 +58,38 @@ export class DatabaseSetup {
   }
 
   /**
-   * Create category database for relation testing
+   * Validate database structure against expected schema
    */
-  async createCategoryDatabase(parentPageId: string): Promise<string> {
-    try {
-      logger.info('Creating category database...');
+  private async validateDatabaseStructure(
+    testDatabaseId: string,
+    categoryDatabaseId: string
+  ): Promise<void> {
+    const { testValidation, categoryValidation } = await this.validator.validateDatabases(
+      testDatabaseId,
+      categoryDatabaseId,
+      E2E_TEST_SCHEMA,
+      E2E_CATEGORY_SCHEMA
+    );
 
-      const database = await this.client.databases.create({
-        parent: { page_id: parentPageId },
-        title: [
-          {
-            text: {
-              content: E2E_CATEGORY_SCHEMA.notionName,
-            },
-          },
-        ],
-        properties: CATEGORY_DATABASE_PROPERTIES,
-      });
-
-      await this.sleep(this.rateLimitDelay);
-
-      logger.info(`Category database created: ${database.id}`);
-      return database.id;
-    } catch (error) {
-      logger.error(
-        `Failed to create category database: ${error instanceof Error ? error.message : String(error)}`
+    // Check if test database is valid
+    if (!testValidation.isValid) {
+      throw new Error(
+        this.validator.formatValidationError(testValidation, E2E_TEST_SCHEMA.notionName)
       );
-      throw error;
     }
-  }
 
-  /**
-   * Create test database with relation to category database
-   */
-  async createTestDatabase(parentPageId: string, categoryDatabaseId: string): Promise<string> {
-    try {
-      logger.info('Creating test database with relation...');
-
-      // Create database with base properties
-      const database = await this.client.databases.create({
-        parent: { page_id: parentPageId },
-        title: [
-          {
-            text: {
-              content: E2E_TEST_SCHEMA.notionName,
-            },
-          },
-        ],
-        properties: {
-          ...TEST_DATABASE_PROPERTIES_BASE,
-          カテゴリー: {
-            relation: {
-              database_id: categoryDatabaseId,
-              type: 'dual_property' as const,
-              // biome-ignore lint/suspicious/noExplicitAny: Notion API requires dynamic typing for dual_property
-              dual_property: {} as any,
-            },
-          },
-        },
-      });
-
-      await this.sleep(this.rateLimitDelay);
-
-      logger.info(`Test database created with relation: ${database.id}`);
-      return database.id;
-    } catch (error) {
-      logger.error(
-        `Failed to create test database: ${error instanceof Error ? error.message : String(error)}`
+    // Check if category database is valid
+    if (!categoryValidation.isValid) {
+      throw new Error(
+        this.validator.formatValidationError(categoryValidation, E2E_CATEGORY_SCHEMA.notionName)
       );
-      throw error;
+    }
+
+    // Log warnings if any
+    if (testValidation.warnings.length > 0 || categoryValidation.warnings.length > 0) {
+      logger.warning('Database validation completed with warnings');
+    } else {
+      logger.info('✅ Database validation completed successfully');
     }
   }
 
@@ -338,42 +299,61 @@ export class DatabaseSetup {
 
   /**
    * Setup test databases and populate with data
+   * Databases must be created manually beforehand
    */
   async setup(
-    parentPageId: string
+    _parentPageId: string
   ): Promise<{ testDatabaseId: string; categoryDatabaseId: string }> {
-    // First, create or find category database
-    let categoryDatabaseId = await this.findTestDatabase(E2E_CATEGORY_SCHEMA.notionName);
+    logger.info('🔍 Looking for manually created test databases...');
 
+    // Find category database (must exist)
+    const categoryDatabaseId = await this.findTestDatabase(E2E_CATEGORY_SCHEMA.notionName);
     if (!categoryDatabaseId) {
-      categoryDatabaseId = await this.createCategoryDatabase(parentPageId);
-    } else {
-      logger.info(`Using existing category database: ${categoryDatabaseId}`);
-      await this.cleanupTestData(categoryDatabaseId);
+      throw new Error(
+        `❌ Category database "${E2E_CATEGORY_SCHEMA.notionName}" not found!\n\n` +
+          `Please create the test databases manually before running E2E tests:\n` +
+          `1. Create "${E2E_CATEGORY_SCHEMA.notionName}" database\n` +
+          `2. Create "${E2E_TEST_SCHEMA.notionName}" database\n` +
+          `3. Share both databases with your Notion integration\n` +
+          `4. See e2e/DATABASE_TEMPLATE.md for the exact schema required\n`
+      );
     }
+
+    logger.info(`Found category database: ${categoryDatabaseId}`);
+
+    // Find test database (must exist)
+    const testDatabaseId = await this.findTestDatabase(E2E_TEST_SCHEMA.notionName);
+    if (!testDatabaseId) {
+      throw new Error(
+        `❌ Test database "${E2E_TEST_SCHEMA.notionName}" not found!\n\n` +
+          `Please create the test databases manually before running E2E tests:\n` +
+          `1. Create "${E2E_CATEGORY_SCHEMA.notionName}" database\n` +
+          `2. Create "${E2E_TEST_SCHEMA.notionName}" database\n` +
+          `3. Share both databases with your Notion integration\n` +
+          `4. See e2e/DATABASE_TEMPLATE.md for the exact schema required\n`
+      );
+    }
+
+    logger.info(`Found test database: ${testDatabaseId}`);
+
+    // Validate database structures
+    logger.info('📋 Validating database structures...');
+    await this.validateDatabaseStructure(testDatabaseId, categoryDatabaseId);
+
+    // Clean up existing data
+    logger.info('🧹 Cleaning up existing data...');
+    await this.cleanupTestData(categoryDatabaseId);
+    await this.cleanupTestData(testDatabaseId);
 
     // Create categories
+    logger.info('📁 Creating category records...');
     const categoryIds = await this.createCategories(categoryDatabaseId);
 
-    // Then, create or find test database
-    let testDatabaseId = await this.findTestDatabase(E2E_TEST_SCHEMA.notionName);
+    // Populate with test data
+    logger.info('📝 Populating test data...');
+    await this.populateTestData(testDatabaseId, getAllTestRecords(), categoryIds);
 
-    if (!testDatabaseId) {
-      // Create new database with relation
-      testDatabaseId = await this.createTestDatabase(parentPageId, categoryDatabaseId);
-
-      // Populate with test data
-      await this.populateTestData(testDatabaseId, getAllTestRecords(), categoryIds);
-    } else {
-      logger.info(`Using existing test database: ${testDatabaseId}`);
-
-      // Clean up existing data
-      await this.cleanupTestData(testDatabaseId);
-
-      // Repopulate with fresh test data
-      await this.populateTestData(testDatabaseId, getAllTestRecords(), categoryIds);
-    }
-
+    logger.info('✅ Database setup completed successfully');
     return { testDatabaseId, categoryDatabaseId };
   }
 
