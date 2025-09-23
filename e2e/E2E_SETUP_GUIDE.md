@@ -2,13 +2,17 @@
 
 ## Overview
 
-This guide clarifies the responsibilities between manual Notion UI setup and automated test scripts for E2E testing of notion-typed-client.
+This guide explains how to set up the E2E testing environment for notion-typed-client. The setup requires manual database creation in Notion, followed by automated test execution.
 
-## Setup Responsibilities
+## Important Note
 
-### 📋 Manual Setup Requirements (One-time, via Notion UI)
+⚠️ **Databases must be created manually** due to Notion API limitations. Certain property types (especially Status) cannot be created via API and require manual setup through the Notion UI.
 
-These steps must be completed manually through the Notion UI before running E2E tests:
+## Setup Requirements
+
+### 📋 Manual Setup (One-time, via Notion UI)
+
+Complete these steps manually through the Notion UI before running E2E tests:
 
 #### 1. Create Notion Integration
 - Go to [https://www.notion.so/my-integrations](https://www.notion.so/my-integrations)
@@ -19,39 +23,36 @@ These steps must be completed manually through the Notion UI before running E2E 
   - Capabilities: Read, Update, Insert content
 - Copy the Internal Integration Token (starts with `secret_`)
 
-#### 2. Create Parent Page for Tests
-- Create a new page in your Notion workspace
-- Name it: `E2E Test Container` (or any name you prefer)
-- Share the page with your integration:
-  - Click "Share" button
-  - Invite your integration
-  - Grant full access
-- Copy the page ID from the URL:
-  - URL format: `https://www.notion.so/Page-Name-{PAGE_ID}`
-  - Copy the ID part (32 characters, may include hyphens)
+#### 2. Create Test Databases
+- **Follow the exact schema in [DATABASE_TEMPLATE.md](DATABASE_TEMPLATE.md)**
+- Create two databases:
+  1. `E2E Test Database` - Main test database with all property types
+  2. `E2E Categories` - Category database for relation testing
+- **Critical:** The Status property in the test database must be configured manually
+- Share both databases with your integration (full access)
 
-#### 3. Configure Environment Variables
+#### 3. Create Parent Page (Optional)
+- Only needed if you want databases under a specific page
+- Create a page named `E2E Test Container`
+- Share with your integration
+- Move databases under this page if desired
+
+#### 4. Configure Environment Variables
 Create `e2e/.env.e2e` file:
 ```env
 NOTION_API_KEY_E2E=secret_xxx  # Your integration token
-NOTION_PARENT_PAGE_ID=xxx       # Your parent page ID
+NOTION_PARENT_PAGE_ID=xxx       # Parent page ID (can be any page with access)
 ```
 
-### 🤖 Automated Setup (Handled by Test Scripts)
+### 🤖 Automated Tasks (Handled by Test Scripts)
 
-The following are **automatically** handled by the test lifecycle and require **no manual intervention**:
+The following are **automatically** handled by the test lifecycle:
 
-#### Database Creation
-- ✅ E2E Test Database (タスク管理)
-- ✅ E2E Category Database (カテゴリ)
-- ✅ Relation properties between databases
-
-#### Property Configuration
-All properties are created automatically with correct types:
-- ✅ Title, Rich Text, Select, Multi-Select
-- ✅ Number, Date, Checkbox, People
-- ✅ Relation properties
-- ⚠️ Status properties (skipped - API limitation)
+#### Database Validation
+- ✅ Finds existing databases by name
+- ✅ Validates all required properties exist
+- ✅ Checks property types match expectations
+- ✅ Reports missing or incorrect properties
 
 #### Test Data Population
 - ✅ Creates 12 test records with varied data
@@ -68,18 +69,19 @@ All properties are created automatically with correct types:
 
 ```mermaid
 graph TD
-    A[Manual: Create Integration] --> B[Manual: Create Parent Page]
-    B --> C[Manual: Set Environment Variables]
-    C --> D[Run: pnpm test:e2e]
-    D --> E[Auto: TestLifecycle.globalSetup]
-    E --> F[Auto: Create/Find Databases]
-    F --> G[Auto: Configure Properties]
-    G --> H[Auto: Populate Test Data]
-    H --> I[Auto: Generate Types & Client]
-    I --> J[Run Test Suites]
-    J --> K[Auto: TestLifecycle.globalTeardown]
-    K --> L[Auto: Clean Test Data]
-    L --> M[Auto: Remove Generated Files]
+    A[Manual: Create Integration] --> B[Manual: Create Databases with Properties]
+    B --> C[Manual: Configure Status Property]
+    C --> D[Manual: Set Environment Variables]
+    D --> E[Run: pnpm test:e2e]
+    E --> F[Auto: TestLifecycle.globalSetup]
+    F --> G[Auto: Find & Validate Databases]
+    G --> H[Auto: Clean Existing Data]
+    H --> I[Auto: Populate Test Data]
+    I --> J[Auto: Generate Types & Client]
+    J --> K[Run Test Suites]
+    K --> L[Auto: TestLifecycle.globalTeardown]
+    L --> M[Auto: Clean Test Data]
+    M --> N[Auto: Remove Generated Files]
 ```
 
 ## Running E2E Tests
@@ -108,20 +110,20 @@ E2E_VERBOSE_LOGGING=true pnpm test:e2e
 
 ## What Happens During Setup
 
-### First Run (No Existing Databases)
-1. Creates new E2E Category Database
-2. Creates new E2E Test Database with relations
-3. Populates both databases with test data
-4. Generates configuration file
-5. Builds TypeScript types and client
-6. Runs test suites
+### Database Validation
+1. Searches for databases by exact name match
+2. Validates all required properties exist
+3. Checks property types (title, text, select, status, etc.)
+4. Reports any missing or misconfigured properties
+5. Fails fast with clear error messages if validation fails
 
-### Subsequent Runs (Databases Exist)
-1. Finds existing databases by name
-2. Cleans existing data (archives pages)
-3. Repopulates with fresh test data
-4. Regenerates types and client
-5. Runs test suites
+### Test Execution
+1. Cleans any existing test data
+2. Populates databases with fresh test data
+3. Generates TypeScript types from actual schema
+4. Creates type-safe client
+5. Runs all test suites
+6. Cleans up test data after completion
 
 ## Configuration Options
 
@@ -142,44 +144,71 @@ E2E_VERBOSE_LOGGING=false      # Show detailed logs
 
 ### Common Issues
 
+#### "Database not found"
+- Ensure database names exactly match: `E2E Test Database` and `E2E Categories`
+- Verify databases are shared with your integration
+- Check integration has full access
+- See [DATABASE_TEMPLATE.md](DATABASE_TEMPLATE.md) for exact requirements
+
+#### "Missing property: ステータス"
+- The Status property must be created manually in Notion UI
+- Cannot be created via API due to Notion limitations
+- Follow the Status configuration in DATABASE_TEMPLATE.md
+
+#### "Property has wrong type"
+- Check property type matches DATABASE_TEMPLATE.md exactly
+- Delete and recreate the property if needed
+- Ensure property names use correct Japanese characters
+
 #### "Missing required environment variable"
 - Ensure `e2e/.env.e2e` exists with correct values
 - Check that integration token starts with `secret_`
-
-#### "Database creation failed"
-- Verify integration has full access to parent page
-- Check parent page ID is correct (32 characters)
 
 #### "Rate limit exceeded"
 - Increase `E2E_RATE_LIMIT_DELAY` to 500 or higher
 - Notion API limit is 3 requests/second
 
-#### Tests fail with "Status is not defined"
-- This is expected - Status properties cannot be created via API
-- Tests involving Status are automatically skipped
-
 ## Important Notes
 
-### What You DON'T Need to Do Manually
-- ❌ Create databases in Notion UI
-- ❌ Configure database properties
-- ❌ Add test data
-- ❌ Set up relations between databases
-- ❌ Generate TypeScript types
-- ❌ Build the client
+### What You MUST Do Manually
+- ✅ Create both test databases with exact names
+- ✅ Configure all properties, especially Status
+- ✅ Set up relation between databases
+- ✅ Share databases with integration
+
+### What's Automated
+- ✅ Database discovery and validation
+- ✅ Test data population and cleanup
+- ✅ TypeScript type generation
+- ✅ Client building and testing
 
 ### API Limitations
-- **Status Properties**: Cannot be created or configured via API. Tests involving Status properties are automatically skipped.
-- **Formula/Rollup**: Read-only properties, not included in E2E tests
+- **Status Properties**: Cannot be created via API, must be configured manually
+- **Formula/Rollup**: Read-only properties, must be created manually if needed
+- **Button**: Cannot be created via API
 - **Database Deletion**: Not supported by API; tests use archiving instead
 
 ## Summary
 
-**Manual setup = 2 things only:**
-1. Create integration and get token
-2. Create parent page and share with integration
+**Manual setup required (one-time):**
+1. Create Notion integration and get token
+2. Create two databases following [DATABASE_TEMPLATE.md](DATABASE_TEMPLATE.md)
+3. Configure Status property and other properties
+4. Share databases with integration
 
-**Everything else is automated** by the test lifecycle, ensuring consistent, repeatable test environments without manual database configuration.
+**Everything else is automated**, including data population, type generation, and test execution.
+
+## Quick Start
+
+```bash
+# 1. Create databases in Notion UI (see DATABASE_TEMPLATE.md)
+# 2. Configure environment
+cp e2e/.env.e2e.example e2e/.env.e2e
+# Edit .env.e2e with your values
+
+# 3. Run tests
+pnpm test:e2e
+```
 
 ## CI/CD Setup (GitHub Actions)
 

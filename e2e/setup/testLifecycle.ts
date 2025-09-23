@@ -58,37 +58,53 @@ export class TestLifecycle {
 
     console.log('🚀 Starting global E2E test setup...');
 
-    // 1. Setup databases
-    const setup = new DatabaseSetup(E2E_CONFIG.apiKey, E2E_CONFIG.rateLimitDelay);
-    const { testDatabaseId, categoryDatabaseId } = await setup.setup(E2E_CONFIG.parentPageId);
-    TestLifecycle.testDatabaseId = testDatabaseId;
-    TestLifecycle.categoryDatabaseId = categoryDatabaseId;
+    try {
+      // 1. Setup databases (validation and data population)
+      const setup = new DatabaseSetup(E2E_CONFIG.apiKey, E2E_CONFIG.rateLimitDelay);
+      const { testDatabaseId, categoryDatabaseId } = await setup.setup(E2E_CONFIG.parentPageId);
+      TestLifecycle.testDatabaseId = testDatabaseId;
+      TestLifecycle.categoryDatabaseId = categoryDatabaseId;
 
-    // 2. Generate types and client using shared utility
-    TestLifecycle.configPath = await E2ETypeGenerator.generateAll(
-      testDatabaseId,
-      categoryDatabaseId,
-      E2E_CONFIG.apiKey,
-      E2E_CONFIG.verboseLogging
-    );
+      // 2. Generate types and client using shared utility
+      TestLifecycle.configPath = await E2ETypeGenerator.generateAll(
+        testDatabaseId,
+        categoryDatabaseId,
+        E2E_CONFIG.apiKey,
+        E2E_CONFIG.verboseLogging
+      );
 
-    // 5. Initialize Notion client
-    TestLifecycle.notionClient = new Client({ auth: E2E_CONFIG.apiKey });
+      // 3. Initialize Notion client
+      TestLifecycle.notionClient = new Client({ auth: E2E_CONFIG.apiKey });
 
-    // 6. Import generated client
-    const clientModule = await import('../generated/E2ETestClient').catch(() => null);
-    TestLifecycle.generatedClient = clientModule?.NotionTypedClient;
+      // 4. Import generated client
+      const clientModule = await import('../generated/E2ETestClient').catch(() => null);
+      TestLifecycle.generatedClient = clientModule?.NotionTypedClient;
 
-    TestLifecycle.setupComplete = true;
-    console.log('✅ Global E2E test setup complete');
+      TestLifecycle.setupComplete = true;
+      console.log('✅ Global E2E test setup complete');
 
-    return {
-      testDatabaseId,
-      categoryDatabaseId,
-      configPath: TestLifecycle.configPath,
-      client: TestLifecycle.notionClient,
-      GeneratedClient: TestLifecycle.generatedClient,
-    };
+      return {
+        testDatabaseId,
+        categoryDatabaseId,
+        configPath: TestLifecycle.configPath,
+        client: TestLifecycle.notionClient,
+        GeneratedClient: TestLifecycle.generatedClient,
+      };
+    } catch (error) {
+      // Enhanced error handling with helpful messages
+      console.error('❌ E2E test setup failed:');
+      console.error(error instanceof Error ? error.message : String(error));
+
+      if (error instanceof Error && error.message.includes('not found')) {
+        console.error('\n📝 Please follow these steps:');
+        console.error('1. Create the test databases in Notion UI');
+        console.error('2. See e2e/DATABASE_TEMPLATE.md for exact schema');
+        console.error('3. Share databases with your integration');
+        console.error('4. Run the tests again\n');
+      }
+
+      throw error;
+    }
   }
 
   /**
